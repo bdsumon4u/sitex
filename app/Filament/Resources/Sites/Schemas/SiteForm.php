@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Operation;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
@@ -157,16 +158,27 @@ class SiteForm
     protected static function hostingField(): Component
     {
         return Select::make('hosting_id')
-            ->relationship('hosting', 'domain')
+            ->relationship('hosting', 'domain', function ($query) {
+                $query->withCount('sites');
+            })
             ->required()
             ->searchable()
             ->preload()
             ->live()
+            ->getOptionLabelFromRecordUsing(function (?Model $record) {
+                return $record ? $record->domain.' ('.$record->sites_count.' / '.$record->site_limit.')' : '';
+            })
             ->afterStateUpdated(function (Set $set, mixed $state) {
                 $hosting = Hosting::select([
-                    'id', 'domain',
+                    'id', 'domain', 'site_limit',
                 ])->findOrFail($state);
                 $set('hosting_domain', $hosting->domain);
+                $set('limit', max($hosting->site_limit - $hosting->sites()->count(), 0));
+            })
+            ->hint(function (Get $get) {
+                if ($get('hosting_id')) {
+                    return $get('limit').' slot(s) remaining';
+                }
             });
     }
 
@@ -175,7 +187,9 @@ class SiteForm
         return TextInput::make('domain')
             ->required()
             ->live(true)
-            ->disabled(fn (Get $get) => ! $get($statePrefix.'hosting_id'))
+            ->disabled(function (Get $get) use ($statePrefix) {
+                return ! $get($statePrefix.'hosting_id') || ! $get($statePrefix.'limit');
+            })
             ->unique(ignoreRecord: true)
             ->rules([
                 'regex:/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i',
@@ -192,7 +206,9 @@ class SiteForm
     {
         return TextInput::make('directory')
             ->regex('/^[a-zA-Z0-9._]+$/')
-            ->disabled(fn (Get $get) => ! $get($statePrefix.'hosting_id'))
+            ->disabled(function (Get $get) use ($statePrefix) {
+                return ! $get($statePrefix.'hosting_id') || ! $get($statePrefix.'limit');
+            })
             ->required();
     }
 

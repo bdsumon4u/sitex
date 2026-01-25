@@ -41,11 +41,19 @@ class MultiForm extends SiteForm
                     }),
                 Repeater::make('sites')
                     ->label('Sites')
+                    ->helperText(function (Get $get) {
+                        if ($get('hosting_id')) {
+                            return 'You can create up to '.$get('limit').' site(s) on the selected hosting.';
+                        }
+
+                        return 'Please select a hosting to know how many sites you can create.';
+                    })
                     ->schema(self::siteForm())
                     ->minItems(1)
+                    ->maxItems(fn (Get $get) => $get('limit') ?? 0)
                     ->columns(1)
                     ->columnSpanFull()
-                    ->live(),
+                    ->defaultItems(0),
             ])
             ->columns(4);
     }

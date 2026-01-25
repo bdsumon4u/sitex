@@ -27,4 +27,9 @@ class Hosting extends Model
     {
         return $this->belongsTo(Server::class);
     }
+
+    public function sites()
+    {
+        return $this->hasMany(Site::class);
+    }
 }

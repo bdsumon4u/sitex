@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class HostingsTable
 {
@@ -22,8 +23,10 @@ class HostingsTable
                 TextColumn::make('username')
                     ->searchable(),
                 TextColumn::make('site_limit')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Sites')
+                    ->formatStateUsing(function (Model $record, string $state) {
+                        return $record->sites()->count().' / '.$state;
+                    }),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
