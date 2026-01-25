@@ -2,11 +2,21 @@
 
 namespace App\Policies;
 
+use App\Models\Admin;
 use App\Models\Organization;
 use App\Models\User;
 
 class OrganizationPolicy
 {
+    public function before(Admin|User $user): ?bool
+    {
+        if ($user instanceof Admin) {
+            return true;
+        }
+
+        return null;
+    }
+
     /**
      * Determine whether the user can view any models.
      */
@@ -18,7 +28,7 @@ class OrganizationPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Organization $organization): bool
+    public function view(Admin|User $user, Organization $organization): bool
     {
         return false;
     }
