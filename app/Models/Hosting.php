@@ -4,25 +4,27 @@ namespace App\Models;
 
 use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Server extends Model
+class Hosting extends Model
 {
     use BelongsToOrganization;
 
     protected $hidden = [
+        'password',
         'token',
     ];
 
     protected function casts(): array
     {
         return [
+            'password' => 'hashed',
             'token' => 'encrypted',
         ];
     }
 
-    public function hostings(): HasMany
+    public function server(): BelongsTo
     {
-        return $this->hasMany(Hosting::class);
+        return $this->belongsTo(Server::class);
     }
 }
