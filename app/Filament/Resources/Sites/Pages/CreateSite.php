@@ -20,4 +20,11 @@ class CreateSite extends CreateRecord
             CopySshPubKeyAction::make(),
         ];
     }
+
+    protected function afterCreate(): void
+    {
+        if (! $this->getRecord()->parent_id) {
+            return;
+        }
+    }
 }

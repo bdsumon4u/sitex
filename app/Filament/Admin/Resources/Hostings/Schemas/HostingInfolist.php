@@ -17,7 +17,9 @@ class HostingInfolist
                     ->label('Server'),
                 TextEntry::make('domain'),
                 TextEntry::make('username'),
-                TextEntry::make('token'),
+                TextEntry::make('token')
+                    ->placeholder('-')
+                    ->columnSpanFull(),
                 TextEntry::make('site_limit')
                     ->numeric(),
                 TextEntry::make('ssh_port')

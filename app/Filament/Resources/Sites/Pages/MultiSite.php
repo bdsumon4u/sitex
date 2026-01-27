@@ -47,18 +47,20 @@ class MultiSite extends CreateSite
             foreach ($data['sites'] as $siteData) {
                 $this->callHook('beforeCreate');
 
-                $record = $this->handleRecordCreation($siteData + [
+                $this->record = $this->handleRecordCreation($siteData + [
                     'parent_id' => $data['parent_id'] ?? null,
                     'hosting_id' => $data['hosting_id'] ?? null,
                     'name' => $siteData['domain'],
                 ]);
 
-                $this->form->model($record)->saveRelationships();
+                $this->form->model($this->getRecord())->saveRelationships();
 
                 $this->callHook('afterCreate');
-                Event::dispatch(RecordCreated::class, ['record' => $record, 'data' => $data, 'page' => $this]);
-                Event::dispatch(RecordSaved::class, ['record' => $record, 'data' => $data, 'page' => $this]);
+                Event::dispatch(RecordCreated::class, ['record' => $this->getRecord(), 'data' => $data, 'page' => $this]);
+                Event::dispatch(RecordSaved::class, ['record' => $this->getRecord(), 'data' => $data, 'page' => $this]);
             }
+
+            $this->record = null;
         } catch (Halt $exception) {
             $exception->shouldRollbackDatabaseTransaction() ?
                 $this->rollBackDatabaseTransaction() :
