@@ -34,4 +34,14 @@ class Site extends Model
     {
         return $this->belongsTo(Hosting::class);
     }
+
+    public function getPrefixedDatabaseNameAttribute(): string
+    {
+        return $this->hosting->username.'_'.$this->database_name;
+    }
+
+    public function getPrefixedDatabaseUserAttribute(): string
+    {
+        return $this->hosting->username.'_'.$this->database_user;
+    }
 }

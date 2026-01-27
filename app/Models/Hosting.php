@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Http;
 
 class Hosting extends Model
 {
@@ -31,5 +32,25 @@ class Hosting extends Model
     public function sites()
     {
         return $this->hasMany(Site::class);
+    }
+
+    public function cPanel(string $module, string $action, array $params = [], ?string $key = null): array
+    {
+        $endpoint = "https://{$this->server->ip}:2083/json-api/cpanel";
+
+        /** @var \Illuminate\Http\Client\Response */
+        $response = Http::withHeader('Authorization', "cpanel $this->username:$this->token")
+            ->acceptJson()
+            ->withoutVerifying()
+            ->throw()
+            ->get($endpoint, [
+                'api.version' => 1,
+                'cpanel_jsonapi_func' => $action,
+                'cpanel_jsonapi_user' => $this->username,
+                'cpanel_jsonapi_module' => $module,
+                'cpanel_jsonapi_apiversion' => 2,
+            ] + $params);
+
+        return $response->json($key, []);
     }
 }
