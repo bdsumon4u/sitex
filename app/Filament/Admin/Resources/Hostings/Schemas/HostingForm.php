@@ -4,9 +4,7 @@ namespace App\Filament\Admin\Resources\Hostings\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Illuminate\Database\Eloquent\Builder;
 
 class HostingForm
 {
@@ -21,9 +19,7 @@ class HostingForm
                     ->required()
                     ->live(),
                 Select::make('server_id')
-                    ->relationship('server', 'name', function (Builder $query, Get $get) {
-                        $query->where('organization_id', $get('organization_id'));
-                    })
+                    ->relationship('server', 'name')
                     ->hint(str('Select an **Organization** before.')->inlineMarkdown()->toHtmlString())
                     ->searchable()
                     ->preload()
