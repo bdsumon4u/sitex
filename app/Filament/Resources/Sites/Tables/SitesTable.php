@@ -24,6 +24,11 @@ class SitesTable
                 TextColumn::make('hosting.domain')
                     ->searchable(),
                 TextColumn::make('domain')
+                    ->url(fn ($record) => 'http://'.$record->domain)
+                    ->label('Domain')
+                    ->openUrlInNewTab()
+                    ->iconPosition('after')
+                    ->icon('heroicon-o-link')
                     ->searchable(),
                 TextColumn::make('directory')
                     ->searchable(),
