@@ -12,14 +12,14 @@ class Hosting extends Model
     use BelongsToOrganization;
 
     protected $hidden = [
-        'password',
-        'token',
+        // 'password',
+        // 'token',
     ];
 
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
+            'password' => 'encrypted',
             'token' => 'encrypted',
         ];
     }

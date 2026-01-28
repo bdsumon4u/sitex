@@ -11,12 +11,12 @@ class ServerInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('organization.name')
-                    ->label('Organization'),
                 TextEntry::make('name'),
                 TextEntry::make('ip')
                     ->label('IP'),
                 TextEntry::make('username')
+                    ->placeholder('-'),
+                TextEntry::make('password')
                     ->placeholder('-'),
                 TextEntry::make('endpoint')
                     ->placeholder('-')
@@ -24,6 +24,8 @@ class ServerInfolist
                 TextEntry::make('token')
                     ->placeholder('-')
                     ->columnSpanFull(),
+                TextEntry::make('ftp_port'),
+                TextEntry::make('ssh_port'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('servers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('organization_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('ip');
             $table->string('username')->nullable();
+            $table->text('password')->nullable();
             $table->text('endpoint')->nullable();
             $table->text('token')->nullable();
+            $table->integer('ftp_port')->default(21);
+            $table->integer('ssh_port')->default(22);
             $table->timestamps();
         });
     }

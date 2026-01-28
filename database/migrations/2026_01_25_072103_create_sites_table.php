@@ -21,10 +21,10 @@ return new class extends Migration
             $table->string('domain')->index();
             $table->string('directory');
             $table->string('email_username');
-            $table->string('email_password');
+            $table->text('email_password');
             $table->string('database_name');
             $table->string('database_user');
-            $table->string('database_pass');
+            $table->text('database_pass');
             $table->string('status')->default(SiteStatus::PENDING);
             $table->timestamps();
 

@@ -16,14 +16,14 @@ class HostingInfolist
                 TextEntry::make('server.name')
                     ->label('Server'),
                 TextEntry::make('domain'),
+                TextEntry::make('site_limit')
+                    ->numeric(),
                 TextEntry::make('username'),
+                TextEntry::make('password')
+                    ->placeholder('-'),
                 TextEntry::make('token')
                     ->placeholder('-')
                     ->columnSpanFull(),
-                TextEntry::make('site_limit')
-                    ->numeric(),
-                TextEntry::make('ssh_port')
-                    ->numeric(),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

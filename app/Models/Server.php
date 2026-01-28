@@ -11,12 +11,14 @@ class Server extends Model
     use BelongsToOrganization;
 
     protected $hidden = [
-        'token',
+        // 'password',
+        // 'token',
     ];
 
     protected function casts(): array
     {
         return [
+            'password' => 'encrypted',
             'token' => 'encrypted',
         ];
     }

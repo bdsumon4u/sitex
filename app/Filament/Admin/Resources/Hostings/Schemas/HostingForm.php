@@ -24,7 +24,7 @@ class HostingForm
                     ->relationship('server', 'name', function (Builder $query, Get $get) {
                         $query->where('organization_id', $get('organization_id'));
                     })
-                    ->hint(str('Select an **Organization** to populate this drop-down list')->inlineMarkdown()->toHtmlString())
+                    ->hint(str('Select an **Organization** before.')->inlineMarkdown()->toHtmlString())
                     ->searchable()
                     ->preload()
                     ->required(),
@@ -41,10 +41,7 @@ class HostingForm
                     ->required()
                     ->numeric()
                     ->default(1),
-                TextInput::make('ssh_port')
-                    ->required()
-                    ->numeric()
-                    ->default(22),
-            ]);
+            ])
+            ->columns(3);
     }
 }

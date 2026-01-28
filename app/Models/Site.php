@@ -12,15 +12,15 @@ class Site extends Model
     use BelongsToOrganization;
 
     protected $hidden = [
-        'email_password',
-        'database_pass',
+        // 'email_password',
+        // 'database_pass',
     ];
 
     protected function casts(): array
     {
         return [
-            'email_password' => 'hashed',
-            'database_pass' => 'hashed',
+            'email_password' => 'encrypted',
+            'database_pass' => 'encrypted',
             'status' => SiteStatus::class,
         ];
     }

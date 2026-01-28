@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources\Servers\Tables;
+namespace App\Filament\Admin\Resources\Sites\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -9,20 +9,27 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class ServersTable
+class SitesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
+                TextColumn::make('organization.name')
+                    ->searchable(),
+                TextColumn::make('parent.name')
+                    ->searchable(),
+                TextColumn::make('hosting.domain')
+                    ->searchable(),
                 TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('ip')
-                    ->label('IP')
+                TextColumn::make('domain')
                     ->searchable(),
-                TextColumn::make('username')
+                TextColumn::make('directory')
                     ->searchable(),
-                TextColumn::make('password'),
+                TextColumn::make('status')
+                    ->badge()
+                    ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

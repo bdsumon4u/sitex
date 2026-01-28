@@ -17,10 +17,9 @@ return new class extends Migration
             $table->foreignId('server_id')->constrained()->onDelete('cascade');
             $table->string('domain');
             $table->string('username');
-            $table->string('password');
+            $table->text('password');
             $table->text('token');
             $table->integer('site_limit')->default(1);
-            $table->integer('ssh_port')->default(22);
             $table->timestamps();
         });
     }
