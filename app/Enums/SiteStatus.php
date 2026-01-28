@@ -16,6 +16,7 @@ enum SiteStatus: string implements HasColor, HasIcon, HasLabel
     case UPDATING = 'updating';
     case UPDATE_FAILED = 'update_failed';
     case DELETING = 'deleting';
+    case DELETED = 'deleted';
     case DELETE_FAILED = 'delete_failed';
 
     public function getLabel(): string

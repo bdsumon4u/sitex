@@ -23,8 +23,8 @@ class AuthorizeSshKey implements ShouldQueue
     public function __construct(
         private Site $site,
     ) {
-        $this->sourceFtp = $this->buildFtpStorage($this->site->parent);
-        $this->targetFtp = $this->buildFtpStorage($this->site);
+        $this->sourceFtp = $this->site->parent->hosting->ftp();
+        $this->targetFtp = $this->site->hosting->ftp();
     }
 
     /**
@@ -37,23 +37,6 @@ class AuthorizeSshKey implements ShouldQueue
 
         $this->authorize($this->site->parent);
         $this->authorize($this->site);
-    }
-
-    private function buildFtpStorage(Site $site): Filesystem
-    {
-        return Storage::build([
-            'driver' => 'ftp',
-            'host' => $site->hosting->server->ip,
-            'username' => $site->hosting->username,
-            'password' => $site->hosting->password,
-
-            // Optional but recommended
-            'port' => $site->hosting->server->ftp_port,
-            'root' => env('FTP_ROOT', '/'),
-            'passive' => true,
-            'ssl' => false,
-            'timeout' => 30,
-        ]);
     }
 
     private function copySshKeyViaFtp(Filesystem $ftp): void

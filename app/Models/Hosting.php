@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Traits\BelongsToOrganization;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class Hosting extends Model
 {
@@ -52,5 +54,21 @@ class Hosting extends Model
             ] + $params);
 
         return $response->json($key, []);
+    }
+
+    public function ftp(): Filesystem
+    {
+        return Storage::build([
+            'driver' => 'ftp',
+            'host' => $this->server->ip,
+            'username' => $this->username,
+            'password' => $this->password,
+            // Optional but recommended
+            'port' => $this->server->ftp_port,
+            'root' => env('FTP_ROOT', '/'),
+            'passive' => true,
+            'ssl' => false,
+            'timeout' => 30,
+        ]);
     }
 }
