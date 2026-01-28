@@ -20,8 +20,10 @@ class SitesTable
     {
         return $table
             ->poll('5s')
+            ->defaultSort('id', 'desc')
             ->columns([
                 TextColumn::make('hosting.domain')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('domain')
                     ->url(fn ($record) => 'http://'.$record->domain)
@@ -29,11 +31,13 @@ class SitesTable
                     ->openUrlInNewTab()
                     ->iconPosition('after')
                     ->icon('heroicon-o-link')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('directory')
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge()
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()

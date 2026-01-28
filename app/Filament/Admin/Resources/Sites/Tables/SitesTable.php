@@ -19,14 +19,19 @@ class SitesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('id', 'desc')
             ->columns([
                 TextColumn::make('organization.name')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('parent.name')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('hosting.domain')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('name')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('domain')
                     ->url(fn ($record) => 'http://'.$record->domain)
@@ -34,11 +39,13 @@ class SitesTable
                     ->openUrlInNewTab()
                     ->iconPosition('after')
                     ->icon('heroicon-o-link')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('directory')
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge()
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
