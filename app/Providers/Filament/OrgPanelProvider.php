@@ -73,7 +73,7 @@ class OrgPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            // ->strictAuthorization()
+            ->strictAuthorization()
             // ->tenantMenu(false)
             ->tenantMenuItems([
                 'profile' => fn (Action $action): Action => $action->label(__('Settings')),
