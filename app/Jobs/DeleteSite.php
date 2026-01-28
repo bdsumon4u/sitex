@@ -2,13 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Traits\CanDelete;
 use App\Models\Site;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 class DeleteSite implements ShouldQueue
 {
-    use Queueable;
+    use CanDelete, Queueable;
 
     /**
      * Create a new job instance.
@@ -24,6 +25,10 @@ class DeleteSite implements ShouldQueue
      */
     public function handle(): void
     {
+        if (! $this->canDelete()) {
+            return;
+        }
+
         $this->site->delete();
     }
 }

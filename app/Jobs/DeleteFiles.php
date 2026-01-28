@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\SiteStatus;
+use App\Jobs\Traits\CanDelete;
 use App\Models\Site;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -11,7 +12,7 @@ use Throwable;
 
 class DeleteFiles implements ShouldQueue
 {
-    use Queueable;
+    use CanDelete, Queueable;
 
     /**
      * Create a new job instance.
@@ -27,6 +28,10 @@ class DeleteFiles implements ShouldQueue
      */
     public function handle(): void
     {
+        if (! $this->canDelete()) {
+            return;
+        }
+
         try {
             Log::info('Deleting files from filesystem via FTP', [
                 'domain' => $this->site->domain,

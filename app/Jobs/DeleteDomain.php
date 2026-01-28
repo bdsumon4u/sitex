@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\SiteStatus;
+use App\Jobs\Traits\CanDelete;
 use App\Models\Site;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -13,7 +14,7 @@ use Throwable;
 
 class DeleteDomain implements ShouldQueue
 {
-    use Queueable;
+    use CanDelete, Queueable;
 
     /**
      * Create a new job instance.
@@ -29,6 +30,10 @@ class DeleteDomain implements ShouldQueue
      */
     public function handle(): void
     {
+        if (! $this->canDelete()) {
+            return;
+        }
+
         try {
             Log::info('Starting deletion process', [
                 'domain' => $this->site->domain,
