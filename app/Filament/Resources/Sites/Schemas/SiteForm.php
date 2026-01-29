@@ -143,9 +143,8 @@ class SiteForm
     {
         return Select::make('parent_id')
             ->label('Copy From')
-            ->options(fn () => [
-                1, 2, 3,
-            ])
+            ->relationship('parent', 'domain')
+            ->preload()
             ->searchable();
     }
 
