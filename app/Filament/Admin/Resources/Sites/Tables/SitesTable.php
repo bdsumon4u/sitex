@@ -2,72 +2,34 @@
 
 namespace App\Filament\Admin\Resources\Sites\Tables;
 
-use App\Filament\Resources\Sites\Tables\Actions\DeleteDomainAction;
-use App\Filament\Resources\Sites\Tables\Actions\DeleteFilesAction;
-use App\Filament\Resources\Sites\Tables\Actions\DeleteSiteAction;
-use Filament\Actions\ActionGroup;
+use App\Filament\Admin\Resources\Sites\SiteResource;
+use App\Filament\Resources\Sites\Tables\SitesTable as BaseSitesTable;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
-use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
-class SitesTable
+class SitesTable extends BaseSitesTable
 {
     public static function configure(Table $table): Table
     {
-        return $table
-            ->defaultSort('id', 'desc')
-            ->columns([
-                TextColumn::make('organization.name')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('parent.name')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('hosting.domain')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('name')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('domain')
-                    ->url(fn ($record) => 'http://'.$record->domain)
-                    ->label('Domain')
-                    ->openUrlInNewTab()
-                    ->iconPosition('after')
-                    ->icon('heroicon-o-link')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('directory')
-                    ->searchable(),
-                TextColumn::make('status')
-                    ->badge()
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
+        $table = parent::configure($table);
+
+        return $table->columns([
+            TextColumn::make('organization.name')
+                ->sortable()
+                ->searchable(),
+            ...$table->getColumns(),
+        ])
             ->filters([
-                //
+                SelectFilter::make('organization')
+                    ->relationship('organization', 'name')
+                    ->searchable()
+                    ->preload(),
+                ...$table->getFilters(),
             ])
-            ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-                ActionGroup::make([
-                    DeleteDomainAction::make(),
-                    DeleteFilesAction::make(),
-                    DeleteSiteAction::make(),
-                ])->defaultColor(Color::Red),
-            ])
+            ->recordUrl(fn ($record) => SiteResource::getUrl('view', ['record' => $record]))
             ->toolbarActions([
                 // BulkActionGroup::make([
                 //     DeleteBulkAction::make(),

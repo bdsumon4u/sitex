@@ -2,17 +2,22 @@
 
 namespace App\Filament\Resources\Sites\Tables;
 
-use App\Filament\Resources\Sites\Tables\Actions\DeleteDomainAction;
-use App\Filament\Resources\Sites\Tables\Actions\DeleteFilesAction;
-use App\Filament\Resources\Sites\Tables\Actions\DeleteSiteAction;
+use App\Enums\SiteStatus;
+use App\Filament\Resources\Sites\SiteResource;
+use App\Filament\Resources\Sites\Tables\Actions\ForceUpdateAction;
+use App\Filament\Resources\Sites\Tables\Actions\SiteDeleteAction;
+use App\Filament\Resources\Sites\Tables\Actions\SiteRedeployAction;
+use App\Filament\Resources\Sites\Tables\Actions\SiteUpdateAction;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class SitesTable
 {
@@ -22,9 +27,14 @@ class SitesTable
             ->poll('5s')
             ->defaultSort('id', 'desc')
             ->columns([
+                TextColumn::make('parent.name')
+                    ->sortable()
+                    ->searchable()
+                    ->description(fn (Model $record): ?string => $record->parent?->domain),
                 TextColumn::make('hosting.domain')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->description(fn (Model $record): string => $record->hosting->username),
                 TextColumn::make('domain')
                     ->url(fn ($record) => 'http://'.$record->domain)
                     ->label('Domain')
@@ -32,9 +42,8 @@ class SitesTable
                     ->iconPosition('after')
                     ->icon('heroicon-o-link')
                     ->sortable()
-                    ->searchable(),
-                TextColumn::make('directory')
-                    ->searchable(),
+                    ->searchable()
+                    ->description(fn (Model $record): string => $record->directory),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable()
@@ -49,16 +58,26 @@ class SitesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TrashedFilter::make()
+                    ->searchable(),
+                SelectFilter::make('hosting')
+                    ->relationship('hosting', 'domain')
+                    ->searchable(['domain', 'username'])
+                    ->preload(),
+                SelectFilter::make('status')
+                    ->options(SiteStatus::class)
+                    ->searchable(),
             ])
+            ->recordUrl(fn ($record) => SiteResource::getUrl('view', ['record' => $record]))
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
                 ActionGroup::make([
-                    DeleteDomainAction::make(),
-                    DeleteFilesAction::make(),
-                    DeleteSiteAction::make(),
-                ])->defaultColor(Color::Red),
+                    SiteRedeployAction::make(),
+                    SiteUpdateAction::make(),
+                    ForceUpdateAction::make(),
+                ])
+                    ->color(Color::Yellow),
+                EditAction::make(),
+                SiteDeleteAction::make(),
             ])
             ->toolbarActions([
                 // BulkActionGroup::make([

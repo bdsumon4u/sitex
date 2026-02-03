@@ -34,6 +34,8 @@ class DeleteDomain implements ShouldQueue
             return;
         }
 
+        $this->site->update(['status' => SiteStatus::DELETING]);
+
         try {
             Log::info('Starting deletion process', [
                 'domain' => $this->site->domain,
@@ -58,7 +60,7 @@ class DeleteDomain implements ShouldQueue
                     'response' => $data,
                 ]);
 
-                $this->site->update(['status' => SiteStatus::DELETED]);
+                $this->site->delete();
             } else {
                 Log::error('Failed to delete from hosting server', [
                     'domain' => $this->site->domain,

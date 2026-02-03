@@ -9,6 +9,8 @@ class HostingInfolist
 {
     public static function configure(Schema $schema): Schema
     {
+        $schema->getRecord()->loadCount('sites');
+
         return $schema
             ->components([
                 TextEntry::make('organization.name')
@@ -19,7 +21,7 @@ class HostingInfolist
                 TextEntry::make('username'),
                 TextEntry::make('site_limit')
                     ->numeric(),
-                TextEntry::make('ssh_port')
+                TextEntry::make('sites_count')
                     ->numeric(),
                 TextEntry::make('created_at')
                     ->dateTime()

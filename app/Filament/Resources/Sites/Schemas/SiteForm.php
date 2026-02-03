@@ -91,8 +91,7 @@ class SiteForm
                 Action::make('generate')
                     ->icon('heroicon-o-arrow-path')
                     ->action(fn ($component) => $component->state(Str::random(10)))
-            )
-            ->disabledOn(Operation::Edit);
+            );
     }
 
     protected static function databaseSection(): Component
@@ -124,8 +123,7 @@ class SiteForm
                 Action::make('generate')
                     ->icon('heroicon-o-arrow-path')
                     ->action(fn ($component) => $component->state(Str::random(10)))
-            )
-            ->disabledOn(Operation::Edit);
+            );
     }
 
     protected static function emailSection(): Component
@@ -161,21 +159,28 @@ class SiteForm
                 $query->withCount('sites');
             })
             ->required()
-            ->searchable()
+            ->searchable(['domain', 'username'])
             ->preload()
             ->live()
             ->getOptionLabelFromRecordUsing(function (?Model $record) {
                 return $record ? $record->domain.' ('.$record->sites_count.' / '.$record->site_limit.')' : '';
             })
-            ->afterStateUpdated(function (Set $set, mixed $state) {
+            ->afterStateUpdated(function (Set $set, mixed $state): void {
+                if (! $state) {
+                    $set('hosting_domain', null);
+                    $set('limit', null);
+
+                    return;
+                }
+
                 $hosting = Hosting::select([
                     'id', 'domain', 'site_limit',
-                ])->findOrFail($state);
+                ])->withCount('sites')->findOrFail($state);
                 $set('hosting_domain', $hosting->domain);
-                $set('limit', max($hosting->site_limit - $hosting->sites()->count(), 0));
+                $set('limit', max($hosting->site_limit - $hosting->sites_count, 0));
             })
             ->hint(function (Get $get) {
-                if ($get('hosting_id')) {
+                if (! is_null($get('limit'))) {
                     return $get('limit').' slot(s) remaining';
                 }
             });

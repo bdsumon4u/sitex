@@ -14,6 +14,8 @@ class DeleteFiles implements ShouldQueue
 {
     use CanDelete, Queueable;
 
+    public int $timeout = 1800;
+
     /**
      * Create a new job instance.
      */

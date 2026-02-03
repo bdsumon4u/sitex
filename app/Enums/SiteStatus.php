@@ -15,6 +15,7 @@ enum SiteStatus: string implements HasColor, HasIcon, HasLabel
     case DEPLOY_FAILED = 'deploy_failed';
     case UPDATING = 'updating';
     case UPDATE_FAILED = 'update_failed';
+    case PENDING_DELETE = 'pending_delete';
     case DELETING = 'deleting';
     case DELETED = 'deleted';
     case DELETE_FAILED = 'delete_failed';
@@ -29,7 +30,9 @@ enum SiteStatus: string implements HasColor, HasIcon, HasLabel
             self::DEPLOY_FAILED => 'Deploy Failed',
             self::UPDATING => 'Updating',
             self::UPDATE_FAILED => 'Update Failed',
+            self::PENDING_DELETE => 'Pending Delete',
             self::DELETING => 'Deleting',
+            self::DELETED => 'Deleted',
             self::DELETE_FAILED => 'Delete Failed',
         };
     }
@@ -44,7 +47,9 @@ enum SiteStatus: string implements HasColor, HasIcon, HasLabel
             self::DEPLOY_FAILED => 'heroicon-o-exclamation-circle',
             self::UPDATING => 'heroicon-o-arrow-path',
             self::UPDATE_FAILED => 'heroicon-o-exclamation-circle',
+            self::PENDING_DELETE => 'heroicon-o-clock',
             self::DELETING => 'heroicon-o-trash',
+            self::DELETED => 'heroicon-o-check-circle',
             self::DELETE_FAILED => 'heroicon-o-exclamation-circle',
         };
     }
@@ -59,7 +64,9 @@ enum SiteStatus: string implements HasColor, HasIcon, HasLabel
             self::DEPLOY_FAILED => 'danger',
             self::UPDATING => 'secondary',
             self::UPDATE_FAILED => 'danger',
+            self::PENDING_DELETE => 'gray',
             self::DELETING => 'warning',
+            self::DELETED => 'danger',
             self::DELETE_FAILED => 'danger',
         };
     }

@@ -71,4 +71,13 @@ class Hosting extends Model
             'timeout' => 30,
         ]);
     }
+
+    public function copySshKey(): void
+    {
+        $ftp = $this->ftp();
+        $key = Storage::disk('local')->get('HOTASH');
+        $pubKey = Storage::disk('local')->get('HOTASH.pub');
+        $ftp->put('.ssh/HOTASH', $key, 'private');
+        $ftp->put('.ssh/HOTASH.pub', $pubKey, 'private');
+    }
 }

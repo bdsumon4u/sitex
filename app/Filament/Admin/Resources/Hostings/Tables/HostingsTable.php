@@ -24,16 +24,11 @@ class HostingsTable
                     ->searchable(),
                 TextColumn::make('username')
                     ->searchable(),
-                TextColumn::make('token')
-                    ->searchable(),
                 TextColumn::make('site_limit')
                     ->label('Sites')
                     ->formatStateUsing(function (Model $record, string $state) {
                         return $record->sites()->count().' / '.$state;
                     }),
-                TextColumn::make('ssh_port')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

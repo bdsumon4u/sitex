@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Sites\Pages;
 
 use App\Filament\Resources\Sites\Schemas\MultiForm;
+use App\Models\Hosting;
 use Filament\Resources\Events\RecordCreated;
 use Filament\Resources\Events\RecordSaved;
 use Filament\Schemas\Schema;
@@ -10,6 +11,7 @@ use Filament\Support\Exceptions\Halt;
 use Filament\Support\Facades\FilamentView;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class MultiSite extends CreateSite
@@ -44,10 +46,17 @@ class MultiSite extends CreateSite
 
             $data = $this->mutateFormDataBeforeCreate($data);
 
+            if (! $hosting = Hosting::find($data['hosting_id'])) {
+                throw ValidationException::withMessages([
+                    'hosting_id' => 'The selected hosting does not exist.',
+                ]);
+            }
+
             foreach ($data['sites'] as $siteData) {
                 $this->callHook('beforeCreate');
 
                 $this->record = $this->handleRecordCreation($siteData + [
+                    'organization_id' => $hosting->organization_id,
                     'parent_id' => $data['parent_id'] ?? null,
                     'hosting_id' => $data['hosting_id'] ?? null,
                     'name' => $siteData['domain'],

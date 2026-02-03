@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\SiteStatus;
 use App\Jobs\Traits\CanDelete;
 use App\Models\Site;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,6 +29,8 @@ class DeleteSite implements ShouldQueue
         if (! $this->canDelete()) {
             return;
         }
+
+        $this->site->update(['status' => SiteStatus::DELETED]);
 
         $this->site->delete();
     }

@@ -33,7 +33,7 @@ class CreateDatabaseAndUser implements ShouldQueue
         ], 'cpanelresult');
 
         if (array_key_exists('error', $data)) {
-            throw_unless(Str::endsWith($data['error'], 'already exists.'), $data['error']);
+            throw_unless(Str::contains($data['error'], 'already exists.'), $data['error']);
         }
 
         $data = $this->site->hosting->cPanel('MysqlFE', 'createdbuser', [
@@ -42,7 +42,7 @@ class CreateDatabaseAndUser implements ShouldQueue
         ], 'cpanelresult');
 
         if (array_key_exists('error', $data)) {
-            throw_unless(Str::endsWith($data['error'], 'already exists.'), $data['error']);
+            throw_unless(Str::contains($data['error'], 'already exists.'), $data['error']);
 
             Log::info('Database user '.$this->site->prefixed_database_user.' already exists. Updating password.');
             $data = $this->site->hosting->cPanel('MysqlFE', 'changedbuserpassword', [

@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\Sites;
 
 use App\Filament\Admin\Resources\Sites\Pages\CreateSite;
 use App\Filament\Admin\Resources\Sites\Pages\EditSite;
+use App\Filament\Admin\Resources\Sites\Pages\ListActivities;
 use App\Filament\Admin\Resources\Sites\Pages\ListSites;
 use App\Filament\Admin\Resources\Sites\Pages\MultiSite;
 use App\Filament\Admin\Resources\Sites\Pages\ViewSite;
@@ -16,6 +17,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SiteResource extends Resource
 {
@@ -53,8 +56,17 @@ class SiteResource extends Resource
             'index' => ListSites::route('/'),
             'create' => CreateSite::route('/create'),
             'multi' => MultiSite::route('/multi'),
+            'activities' => ListActivities::route('/{record}/activities'),
             'view' => ViewSite::route('/{record}'),
             'edit' => EditSite::route('/{record}/edit'),
         ];
+    }
+
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        return parent::getRecordRouteBindingEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }

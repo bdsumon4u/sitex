@@ -2,20 +2,13 @@
 
 namespace App\Filament\Resources\Sites\Pages;
 
-use App\Enums\SiteStatus;
+use App\Actions\DeploySite;
 use App\Filament\Resources\Sites\Pages\Actions\CopySshPubKeyAction;
 use App\Filament\Resources\Sites\Pages\Actions\MultiSiteAction;
 use App\Filament\Resources\Sites\SiteResource;
-use App\Jobs\AuthorizeSshKey;
-use App\Jobs\CopySiteFromParent;
-use App\Jobs\CreateDatabaseAndUser;
-use App\Jobs\CreateEmailAccount;
-use App\Jobs\CreateNewDomain;
+use App\Models\Hosting;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class CreateSite extends CreateRecord
 {
@@ -30,6 +23,17 @@ class CreateSite extends CreateRecord
         ];
     }
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        if (empty($data['organization_id']) && ! empty($data['hosting_id'])) {
+            $data['organization_id'] = Hosting::query()
+                ->whereKey($data['hosting_id'])
+                ->value('organization_id');
+        }
+
+        return $data;
+    }
+
     protected function afterCreate(): void
     {
         if (! $this->getRecord()->parent_id) {
@@ -38,17 +42,6 @@ class CreateSite extends CreateRecord
 
         $record = $this->getRecord()->load('hosting.server');
 
-        $record->update(['status' => SiteStatus::DEPLOYING]);
-
-        Bus::chain([
-            new AuthorizeSshKey($record),
-            new CreateNewDomain($record),
-            new CreateEmailAccount($record),
-            new CreateDatabaseAndUser($record),
-            new CopySiteFromParent($record),
-        ])->catch(function (Throwable $e) {
-            // A job within the chain has failed...
-            Log::error($e->getMessage());
-        })->dispatch();
+        (new DeploySite)->handle($record);
     }
 }

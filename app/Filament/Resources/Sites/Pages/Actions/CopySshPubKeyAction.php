@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Sites\Pages\Actions;
 
 use Filament\Actions\Action;
-use Filament\Notifications\Notification;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,30 +10,33 @@ class CopySshPubKeyAction extends Action
 {
     public static function make(?string $name = 'copy-ssh-pub-key'): static
     {
+        $publicKey = Storage::drive('local')->get('HOTASH.pub');
+
+        if (! $publicKey) {
+            return parent::make($name)
+                ->label('Copy SSH Public Key')
+                ->color(Color::Lime)
+                ->icon('heroicon-o-clipboard-document')
+                ->disabled()
+                ->tooltip('SSH Public Key Not Found');
+        }
+
+        // Escape the public key for JavaScript
+        $escapedKey = str_replace(['`', '\\', '$', "\n", "\r"], ['\\`', '\\\\', '\\$', '\\n', '\\r'], $publicKey);
+
         return parent::make($name)
             ->label('Copy SSH Public Key')
             ->color(Color::Lime)
             ->icon('heroicon-o-clipboard-document')
-            ->action(function (Action $action) {
-                $publicKey = Storage::drive('local')->get('HOTASH.pub');
-
-                if (! $publicKey) {
-                    Notification::make()
-                        ->title('SSH Public Key Not Found')
-                        ->danger()
-                        ->send();
-
-                    return;
-                }
-
-                // Trigger JavaScript to copy to clipboard
-                $action->js(<<<JS
+            ->extraAttributes([
+                'x-data' => '{ publicKey: `'.$escapedKey.'` }',
+                'x-on:click.prevent' => <<<'JS'
                     if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(`{$publicKey}`).then(() => {
+                        navigator.clipboard.writeText(publicKey).then(() => {
                             new FilamentNotification()
                                 .title('SSH Public Key Copied to Clipboard')
                                 .success()
-                                .send()
+                                .send();
                         }).catch((error) => {
                             const isSecure = window.location.protocol === 'https:';
                             const title = 'Failed to copy to clipboard';
@@ -46,7 +48,7 @@ class CopySshPubKeyAction extends Action
                                 .title(title)
                                 .body(body)
                                 .danger()
-                                .send()
+                                .send();
                         });
                     } else {
                         const isSecure = window.location.protocol === 'https:';
@@ -58,9 +60,10 @@ class CopySshPubKeyAction extends Action
                             .title('Clipboard not supported')
                             .body(body)
                             .danger()
-                            .send()
+                            .send();
                     }
-                JS);
-            });
+                JS,
+            ])
+            ->action(fn () => null);
     }
 }

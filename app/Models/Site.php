@@ -6,10 +6,15 @@ use App\Enums\SiteStatus;
 use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Site extends Model
 {
     use BelongsToOrganization;
+    use LogsActivity;
+    use SoftDeletes;
 
     protected $hidden = [
         // 'email_password',
@@ -43,5 +48,13 @@ class Site extends Model
     public function getPrefixedDatabaseUserAttribute(): string
     {
         return $this->hosting->username.'_'.$this->database_user;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('site');
+        // Chain fluent methods for configuration options
     }
 }

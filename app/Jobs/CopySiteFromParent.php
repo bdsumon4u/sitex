@@ -7,11 +7,14 @@ use App\Models\Site;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Ssh\Ssh;
 
 class CopySiteFromParent implements ShouldQueue
 {
     use Queueable;
+
+    public int $timeout = 1200;
 
     /**
      * Create a new job instance.
@@ -28,11 +31,10 @@ class CopySiteFromParent implements ShouldQueue
     public function handle(): void
     {
         Log::info('Deploying site '.$this->site->name.' to '.$this->site->domain);
-        $process = Ssh::create($this->site->hosting->username, $this->site->hosting->server->ip)
-            ->usePrivateKey(storage_path('app/ssh/HOTASH'))
+        $process = Ssh::create($this->site->parent->hosting->username, $this->site->parent->hosting->server->ip)
+            ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
             ->disablePasswordAuthentication()
             ->disableStrictHostKeyChecking()
-            ->enableQuietMode()
             ->setTimeout(1000)
             ->execute([
                 'cd '.$this->site->parent->directory,
@@ -41,19 +43,29 @@ class CopySiteFromParent implements ShouldQueue
                     '-d' => $this->site->domain,
                     '-h' => $this->site->hosting->server->ip,
                     '-u' => $this->site->hosting->username,
-                    '-db' => $this->site->hosting->database_name,
-                    '-dbu' => $this->site->hosting->database_user,
-                    '-dbp' => $this->site->hosting->database_pass,
-                    '-mu' => $this->site->hosting->email_username,
-                    '-mp' => $this->site->hosting->email_password,
-                    '-dr' => $this->site->hosting->directory,
+                    '-db' => $this->site->prefixed_database_name,
+                    '-dbu' => $this->site->prefixed_database_user,
+                    '-dbp' => $this->site->database_pass,
+                    '-mu' => $this->site->email_username,
+                    '-mp' => $this->site->email_password,
+                    '-r' => $this->site->directory,
                 ])
                     ->flatMap(fn ($val, $key) => [$key, '"'.$val.'"'])
                     ->implode(' '),
             ]);
 
+        Log::info('Copy process output:', [
+            'stdout' => $process->getOutput(),
+            'stderr' => $process->getErrorOutput(),
+            'successful' => $process->isSuccessful(),
+        ]);
+
         if (! $process->isSuccessful()) {
             $this->site->update(['status' => SiteStatus::DEPLOY_FAILED]);
+            Log::error('Copy failed for site '.$this->site->name, [
+                'error' => $process->getErrorOutput(),
+                'output' => $process->getOutput(),
+            ]);
             throw new \Exception($process->getErrorOutput());
         }
 
