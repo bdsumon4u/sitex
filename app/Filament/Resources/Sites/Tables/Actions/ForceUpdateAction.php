@@ -18,7 +18,7 @@ class ForceUpdateAction extends Action
     {
         parent::setUp();
 
-        $this->label(__('Update Update'));
+        $this->label(__('Force Update'));
         $this->successNotificationTitle(__('Updating'));
         $this->color(Color::Yellow);
         $this->icon('heroicon-o-arrow-path');
