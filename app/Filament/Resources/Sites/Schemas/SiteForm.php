@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Sites\Schemas;
 
+use App\Enums\SiteStatus;
 use App\Models\Hosting;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -228,12 +229,18 @@ class SiteForm
                         ->columnSpanFull(),
                     self::domainField(),
                     self::directoryField(),
+                    Select::make('status')
+                        ->options(SiteStatus::class)
+                        ->searchable()
+                        ->required()
+                        ->columnSpanFull(),
                 ])
                     ->dense()
                     ->columns(2)
                     ->columnSpan(2),
                 Group::make([
                     self::emailSection()
+                        ->collapsed(false)
                         ->columns(2)
                         ->columnSpan(1),
                     self::databaseSection()
