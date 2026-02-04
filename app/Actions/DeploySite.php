@@ -30,7 +30,7 @@ class DeploySite
                 // A job within the chain has failed...
                 Log::error($e->getMessage());
             })
-            ->dispatch()
-            ->onQueue('high');
+            ->onQueue('high')
+            ->dispatch();
     }
 }

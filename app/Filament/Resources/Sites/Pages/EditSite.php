@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Sites\Pages;
 
 use App\Filament\Resources\Sites\SiteResource;
-use Filament\Actions\DeleteAction;
+use App\Filament\Resources\Sites\Tables\Actions\SiteDeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -15,7 +15,7 @@ class EditSite extends EditRecord
     {
         return [
             ViewAction::make(),
-            DeleteAction::make(),
+            SiteDeleteAction::make(),
         ];
     }
 }
