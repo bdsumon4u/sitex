@@ -3,8 +3,8 @@
 namespace App\Filament\Admin\Resources\Sites\Pages;
 
 use App\Filament\Admin\Resources\Sites\SiteResource;
+use App\Filament\Admin\Widgets\SiteNavigator;
 use App\Filament\Resources\Sites\Tables\Actions\SiteDeleteAction;
-use App\Filament\Widgets\SiteNavigator;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
