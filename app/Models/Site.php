@@ -24,6 +24,9 @@ class Site extends Model
     protected function casts(): array
     {
         return [
+            'organization_id' => 'integer',
+            'parent_id' => 'integer',
+            'hosting_id' => 'integer',
             'email_password' => 'encrypted',
             'database_pass' => 'encrypted',
             'status' => SiteStatus::class,

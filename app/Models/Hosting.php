@@ -21,8 +21,11 @@ class Hosting extends Model
     protected function casts(): array
     {
         return [
+            'organization_id' => 'integer',
+            'server_id' => 'integer',
             'password' => 'encrypted',
             'token' => 'encrypted',
+            'site_limit' => 'integer',
         ];
     }
 
