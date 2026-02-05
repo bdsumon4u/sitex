@@ -20,6 +20,8 @@ class Server extends Model
         return [
             'password' => 'encrypted',
             'token' => 'encrypted',
+            'ftp_port' => 'integer',
+            'ssh_port' => 'integer',
         ];
     }
 
