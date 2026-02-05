@@ -16,6 +16,7 @@ use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,6 +27,9 @@ class SitesTable
         return $table
             ->poll('5s')
             ->defaultSort('id', 'desc')
+            ->groups([
+                Group::make('hosting.domain'),
+            ])
             ->columns([
                 TextColumn::make('parent.name')
                     ->sortable()
