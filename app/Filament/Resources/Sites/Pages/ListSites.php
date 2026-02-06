@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Sites\Pages;
 
+use App\Filament\Resources\Sites\Pages\Actions\DeleteSitesAction;
 use App\Filament\Resources\Sites\Pages\Actions\MultiSiteAction;
 use App\Filament\Resources\Sites\SiteResource;
 use Filament\Actions\CreateAction;
@@ -16,6 +17,7 @@ class ListSites extends ListRecords
         return [
             CreateAction::make(),
             MultiSiteAction::make(),
+            DeleteSitesAction::make(),
         ];
     }
 }
