@@ -20,3 +20,10 @@ Schedule::command('sites:status-checks')
     ->runInBackground()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/status-'.date('Y-m-d').'.log'));
+
+Schedule::command('sites:delete-files')
+    ->dailyAt('04:00')
+    ->timezone('Asia/Dhaka')
+    ->runInBackground()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/delete-'.date('Y-m-d').'.log'));

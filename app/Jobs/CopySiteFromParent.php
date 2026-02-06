@@ -72,4 +72,14 @@ class CopySiteFromParent implements ShouldQueue
         $this->site->update(['status' => SiteStatus::SITE_ACTIVE]);
         Log::info('Site '.$this->site->name.' deployed successfully to '.$this->site->domain);
     }
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [100, 500, 1000];
+    }
 }
