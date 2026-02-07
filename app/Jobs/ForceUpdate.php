@@ -27,6 +27,8 @@ class ForceUpdate implements ShouldQueue
      */
     public function handle(): void
     {
+        (new AuthorizeSshKey($this->site))->handle();
+
         try {
             $process = Ssh::create($this->site->hosting->username, $this->site->hosting->server->ip)
                 ->usePrivateKey(Storage::disk('local')->path('HOTASH'))

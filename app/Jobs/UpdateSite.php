@@ -28,6 +28,8 @@ class UpdateSite implements ShouldQueue
      */
     public function handle(): void
     {
+        (new AuthorizeSshKey($this->site))->handle();
+
         try {
             Log::info('Updating site '.$this->site->name.' on '.$this->site->domain);
             $process = Ssh::create($this->site->parent->hosting->username, $this->site->parent->hosting->server->ip)
