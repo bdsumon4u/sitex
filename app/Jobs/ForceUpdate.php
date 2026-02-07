@@ -60,7 +60,15 @@ class ForceUpdate implements ShouldQueue
 
             if (! $process->isSuccessful()) {
                 $this->site->update(['status' => SiteStatus::UPDATE_FAILED]);
-                throw new \RuntimeException('SSH command failed: '.$process->getErrorOutput());
+                $errorOutput = trim($process->getErrorOutput());
+                $standardOutput = trim($process->getOutput());
+                $exitCode = $process->getExitCode();
+
+                throw new \RuntimeException(
+                    'SSH command failed. Exit code: '.$exitCode
+                    .' Error output: '.($errorOutput !== '' ? $errorOutput : '[none]')
+                    .' Standard output: '.($standardOutput !== '' ? $standardOutput : '[none]')
+                );
             }
             $this->site->update(['status' => SiteStatus::SITE_ACTIVE]);
         } catch (\Exception $e) {
