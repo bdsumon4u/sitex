@@ -19,7 +19,8 @@ class SitesTable extends BaseSitesTable
         return $table->columns([
             TextColumn::make('organization.name')
                 ->sortable()
-                ->searchable(),
+                ->searchable()
+                ->description(fn ($record) => $record->service_id ?? $record->organization?->service_id),
             ...$table->getColumns(),
         ])
             ->filters([

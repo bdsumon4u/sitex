@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Sites\Schemas;
 use App\Enums\SiteStatus;
 use App\Filament\Resources\Sites\Schemas\SiteForm as BaseSiteForm;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Get;
@@ -74,11 +75,12 @@ class SiteForm extends BaseSiteForm
                         ->columnSpanFull(),
                     self::domainField(),
                     self::directoryField(),
+                    TextInput::make('service_id')
+                        ->label('Service ID'),
                     Select::make('status')
                         ->options(SiteStatus::class)
                         ->searchable()
-                        ->required()
-                        ->columnSpanFull(),
+                        ->required(),
                 ])
                     ->dense()
                     ->columns(2)

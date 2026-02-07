@@ -18,6 +18,8 @@ class OrganizationForm
                 TextInput::make('phone')
                     ->tel()
                     ->required(),
+                TextInput::make('service_id')
+                    ->label('Service ID'),
             ]);
     }
 }
