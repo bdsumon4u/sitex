@@ -28,11 +28,12 @@ class UpdateSite implements ShouldQueue
      */
     public function handle(): void
     {
-        (new AuthorizeSshKey($this->site))->handle();
+        $this->site->update(['status' => SiteStatus::UPDATING]);
 
         try {
+            $this->site->hosting->copySshKey();
             Log::info('Updating site '.$this->site->name.' on '.$this->site->domain);
-            $process = Ssh::create($this->site->parent->hosting->username, $this->site->parent->hosting->server->ip)
+            $process = Ssh::create($this->site->hosting->username, $this->site->hosting->server->ip)
                 ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
                 ->disablePasswordAuthentication()
                 ->disableStrictHostKeyChecking()

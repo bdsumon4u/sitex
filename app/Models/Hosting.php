@@ -7,6 +7,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class Hosting extends Model
@@ -82,5 +83,35 @@ class Hosting extends Model
         $pubKey = Storage::disk('local')->get('HOTASH.pub');
         $ftp->put('.ssh/HOTASH', $key, 'private');
         $ftp->put('.ssh/HOTASH.pub', $pubKey, 'private');
+
+        $this->importSshKey($pubKey);
+        $this->authorizeSshKey();
+    }
+
+    private function importSshKey(string $publicKey): void
+    {
+        Log::info('Importing SSH key for '.$this->domain);
+        $data = $this->cPanel('SSH', 'importkey', [
+            'name' => 'HOTASH',
+            'key' => $publicKey,
+            'type' => 'public',
+        ], 'cpanelresult');
+
+        if (array_key_exists('error', $data)) {
+            Log::error('Failed to import SSH key: '.$data['error']);
+        }
+    }
+
+    private function authorizeSshKey(): void
+    {
+        Log::info('Authorizing SSH key for '.$this->domain);
+        $data = $this->cPanel('SSH', 'authkey', [
+            'key' => 'HOTASH',
+            'action' => 'authorize',
+        ], 'cpanelresult');
+
+        if (array_key_exists('error', $data)) {
+            Log::error('Failed to authorize SSH key: '.$data['error']);
+        }
     }
 }
