@@ -27,6 +27,7 @@ class SiteInfolist
                 TextEntry::make('database_user'),
                 TextEntry::make('database_pass'),
                 TextEntry::make('status')
+                    ->poll('5s')
                     ->badge(),
                 TextEntry::make('created_at')
                     ->dateTime()
