@@ -38,7 +38,7 @@ class CreateNewDomain implements ShouldQueue
             'subdomain' => Str::beforeLast($this->site->domain, '.'),
         ], 'cpanelresult');
 
-        if (array_key_exists('error', $data) && ! str($data['error'])->contains('already exists.')) {
+        if (array_key_exists('error', $data) && ! str($data['error'])->contains('already exists')) {
             $this->site->update(['status' => SiteStatus::DEPLOY_FAILED]);
             throw new \Exception($data['error']);
         }
