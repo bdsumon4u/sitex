@@ -7,6 +7,7 @@ use App\Filament\Admin\Widgets\SiteNavigator;
 use App\Filament\Resources\Sites\Pages\Actions\MultiSiteAction;
 use App\Filament\Resources\Sites\Tables\Actions\ForceUpdateAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteDeleteAction;
+use App\Filament\Resources\Sites\Tables\Actions\SiteRedeployAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteUpdateAction;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
@@ -25,6 +26,7 @@ class EditSite extends EditRecord
             ViewAction::make(),
             SiteDeleteAction::make(),
             ActionGroup::make([
+                SiteRedeployAction::make(),
                 SiteUpdateAction::make(),
                 ForceUpdateAction::make(),
             ]),

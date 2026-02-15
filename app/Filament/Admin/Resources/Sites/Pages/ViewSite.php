@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Sites\Pages;
 use App\Filament\Admin\Resources\Sites\SiteResource;
 use App\Filament\Resources\Sites\Pages\Actions\MultiSiteAction;
 use App\Filament\Resources\Sites\Tables\Actions\ForceUpdateAction;
+use App\Filament\Resources\Sites\Tables\Actions\SiteRedeployAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteUpdateAction;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -26,6 +27,7 @@ class ViewSite extends ViewRecord
                 ->url($this->getResource()::getUrl('activities', ['record' => $this->record])),
             EditAction::make(),
             ActionGroup::make([
+                SiteRedeployAction::make(),
                 SiteUpdateAction::make(),
                 ForceUpdateAction::make(),
             ]),
