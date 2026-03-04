@@ -18,6 +18,9 @@ class HostingForm
                 Select::make('server_id')
                     ->relationship('server', 'name')
                     ->required(),
+                TextInput::make('ip')
+                    ->ipAddress()
+                    ->hint('Leave empty to use server IP'),
                 TextInput::make('domain')
                     ->required(),
                 TextInput::make('username')

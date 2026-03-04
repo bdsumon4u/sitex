@@ -24,6 +24,9 @@ class HostingForm
                     ->searchable()
                     ->preload()
                     ->required(),
+                TextInput::make('ip')
+                    ->ipAddress()
+                    ->hint('Leave empty to use server IP'),
                 TextInput::make('domain')
                     ->required(),
                 TextInput::make('username')

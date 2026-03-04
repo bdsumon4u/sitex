@@ -17,6 +17,8 @@ class HostingInfolist
                     ->label('Organization'),
                 TextEntry::make('server.name')
                     ->label('Server'),
+                TextEntry::make('ip')
+                    ->label('IP Address'),
                 TextEntry::make('domain'),
                 TextEntry::make('username'),
                 TextEntry::make('site_limit')
