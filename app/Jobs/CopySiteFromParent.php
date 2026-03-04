@@ -31,7 +31,7 @@ class CopySiteFromParent implements ShouldQueue
     public function handle(): void
     {
         Log::info('Deploying site '.$this->site->name.' to '.$this->site->domain);
-        $process = Ssh::create($this->site->parent->hosting->username, $this->site->parent->hosting->server->ip)
+        $process = Ssh::create($this->site->parent->hosting->username, $this->site->parent->hosting->ip)
             ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
             ->disablePasswordAuthentication()
             ->disableStrictHostKeyChecking()
@@ -41,7 +41,7 @@ class CopySiteFromParent implements ShouldQueue
                 './copy.sh '.collect([
                     '-s' => $this->site->name,
                     '-d' => $this->site->domain,
-                    '-h' => $this->site->hosting->server->ip,
+                    '-h' => $this->site->hosting->ip,
                     '-u' => $this->site->hosting->username,
                     '-db' => $this->site->prefixed_database_name,
                     '-dbu' => $this->site->prefixed_database_user,

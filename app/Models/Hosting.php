@@ -40,6 +40,11 @@ class Hosting extends Model
         return $this->hasMany(Site::class);
     }
 
+    public function getIpAttribute(): string
+    {
+        return $this->attributes['ip'] ?? $this->server->ip;
+    }
+
     public function cPanel(string $module, string $action, array $params = [], ?string $key = null): array
     {
         $endpoint = "https://{$this->server->ip}:2083/json-api/cpanel";
