@@ -5,12 +5,20 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "lint": "eslint resources/js/ --fix --ext .js,.vue",
         "format": "prettier --write resources/"
     },
     "devDependencies": {
+        "@eslint/js": "^9.19.0",
         "@tailwindcss/vite": "^4.1.18",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
+        "eslint": "^9.39.3",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-import-resolver-typescript": "^4.4.4",
+        "eslint-plugin-import": "^2.32.0",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
         "laravel-vite-plugin": "^2.0.0",
         "prettier": "^3.0.0",
         "tailwindcss": "^4.1.18",
