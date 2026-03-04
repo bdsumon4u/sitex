@@ -25,7 +25,7 @@ class HostingForm
                     ->preload()
                     ->required(),
                 TextInput::make('ip')
-                    ->ipAddress()
+                    ->rules(['nullable', 'ip'])
                     ->hint('Leave empty to use server IP'),
                 TextInput::make('domain')
                     ->required(),

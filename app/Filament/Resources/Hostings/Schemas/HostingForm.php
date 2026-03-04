@@ -19,7 +19,7 @@ class HostingForm
                     ->relationship('server', 'name')
                     ->required(),
                 TextInput::make('ip')
-                    ->ipAddress()
+                    ->rules(['nullable', 'ip'])
                     ->hint('Leave empty to use server IP'),
                 TextInput::make('domain')
                     ->required(),
