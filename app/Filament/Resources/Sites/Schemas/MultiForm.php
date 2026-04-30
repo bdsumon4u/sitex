@@ -66,14 +66,16 @@ class MultiForm extends SiteForm
                     Group::make([
                         self::domainField('../../'),
                         self::directoryField('../../'),
-                        self::emailSection()
+                        self::emailSection('../../')
                             ->columns(2)
                             ->columnSpanFull(),
+                        self::siteUserField('../../'),
+                        self::sitePasswordField('../../'),
                     ])
                         ->dense()
                         ->columns(2)
                         ->columnSpan(2),
-                    self::databaseSection('../../')
+                    self::databaseSection()
                         ->columns(3)
                         ->columnSpan(3),
                 ]),

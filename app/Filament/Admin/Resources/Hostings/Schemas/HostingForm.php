@@ -61,16 +61,13 @@ class HostingForm
                     ->label('Direct IP')
                     ->required(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::CloudPanel->value),
                 TextInput::make('domain')
-                    ->required()
-                    ->visible(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::Cpanel->value),
+                    ->required(),
                 TextInput::make('username')
                     ->required()
-                    ->minLength(2)
-                    ->visible(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::Cpanel->value),
+                    ->minLength(2),
                 TextInput::make('password')
                     ->password()
-                    ->required()
-                    ->visible(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::Cpanel->value),
+                    ->required(),
                 TextInput::make('token')
                     ->required()
                     ->visible(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::Cpanel->value),

@@ -90,6 +90,8 @@ class SiteForm extends BaseSiteForm
                     self::emailSection()
                         ->columns(2)
                         ->columnSpan(1),
+                    self::siteUserField(),
+                    self::sitePasswordField(),
                     self::databaseSection()
                         ->columns(3)
                         ->columnSpan(1),
