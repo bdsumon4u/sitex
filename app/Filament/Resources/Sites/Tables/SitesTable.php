@@ -31,7 +31,7 @@ class SitesTable
                 Group::make('hosting.domain'),
             ])
             ->columns([
-                TextColumn::make('parent.name')
+                TextColumn::make('parent.domain')
                     ->sortable()
                     ->searchable()
                     ->description(fn (Model $record): ?string => $record->parent?->domain),
