@@ -23,7 +23,7 @@ Route::get('/get-service-id/{domain}', function (string $domain) {
     ], 404);
 });
 
-Route::get('sites', function (Request $request) {
+Route::get('site-list', function (Request $request) {
     return Site::query()
         ->when($request->has('status'), fn ($query) => $query->where('status', $request->input('status')))
         ->get(['id', 'domain', 'status']);
