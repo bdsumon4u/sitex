@@ -23,6 +23,12 @@ Route::get('/get-service-id/{domain}', function (string $domain) {
     ], 404);
 });
 
+Route::middleware('throttle:20,5')->get('sites', function (Request $request) {
+    return Site::query()
+        ->when($request->has('status'), fn ($query) => $query->where('status', $request->input('status')))
+        ->get(['id', 'domain', 'status']);
+});
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
