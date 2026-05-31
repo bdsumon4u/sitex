@@ -6,6 +6,7 @@ use App\Filament\Resources\Hostings\Pages\CreateHosting;
 use App\Filament\Resources\Hostings\Pages\EditHosting;
 use App\Filament\Resources\Hostings\Pages\ListHostings;
 use App\Filament\Resources\Hostings\Pages\ViewHosting;
+use App\Filament\Resources\Hostings\RelationManagers\SitesRelationManager;
 use App\Filament\Resources\Hostings\Schemas\HostingForm;
 use App\Filament\Resources\Hostings\Schemas\HostingInfolist;
 use App\Filament\Resources\Hostings\Tables\HostingsTable;
@@ -42,7 +43,7 @@ class HostingResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            SitesRelationManager::class,
         ];
     }
 
