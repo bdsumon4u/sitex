@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Hostings\Tables;
 
+use App\Models\Hosting;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,7 +16,9 @@ class HostingsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->withCount('sites'))
             ->defaultPaginationPageOption(25)
+            ->recordClasses(fn (Hosting $record): string => $record->sites_count >= $record->site_limit ? 'bg-warning-50' : '')
             ->columns([
                 TextColumn::make('organization.name')
                     ->searchable(),
@@ -28,7 +31,7 @@ class HostingsTable
                 TextColumn::make('site_limit')
                     ->label('Sites')
                     ->formatStateUsing(function (Model $record, string $state) {
-                        return $record->sites()->count().' / '.$state;
+                        return $record->sites_count.' / '.$state;
                     }),
                 TextColumn::make('created_at')
                     ->dateTime()
