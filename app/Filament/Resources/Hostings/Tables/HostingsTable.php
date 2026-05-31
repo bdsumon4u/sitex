@@ -15,6 +15,7 @@ class HostingsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('server.name')
                     ->searchable(),
