@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Hosting;
+use App\Models\Organization;
 use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +29,22 @@ Route::get('site-list', function (Request $request) {
     return Site::query()
         ->when($request->has('status'), fn ($query) => $query->where('status', $request->input('status')))
         ->get(['id', 'domain', 'status']);
+});
+
+Route::get('hosting-list/{organization:ulid?}', function (Request $request, ?Organization $organization) {
+    $hostings = Hosting::when($organization, fn ($query) => $query->whereBelongsTo($organization))
+        ->select(['id', 'domain'])
+        ->with(['sites' => fn ($query) => $query->select(['id', 'hosting_id', 'domain'])])
+        ->withCount('sites')
+        ->get()
+        ->map(function (Hosting $hosting) {
+            $data = $hosting->toArray();
+            $data['sites'] = $hosting->sites->pluck('domain');
+
+            return $data;
+        });
+
+    return response()->json($hostings, 200, [], JSON_PRETTY_PRINT);
 });
 
 Route::get('/user', function (Request $request) {
