@@ -11,8 +11,6 @@ class OrganizationForm
     {
         return $schema
             ->components([
-                TextInput::make('ulid')
-                    ->required(),
                 TextInput::make('name')
                     ->required(),
                 TextInput::make('phone')
@@ -20,6 +18,7 @@ class OrganizationForm
                     ->required(),
                 TextInput::make('service_id')
                     ->label('Service ID'),
-            ]);
+            ])
+            ->columns(3);
     }
 }
