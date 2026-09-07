@@ -106,7 +106,7 @@ class SitesTable
             ->recordUrl(fn ($record) => SiteResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 ActionGroup::make([
-                    SiteAnonymousLoginAction::make()->openUrlInNewTab(),
+                    SiteAnonymousLoginAction::make(),
                     SiteEnvEditorAction::make(),
                     SiteMaintenanceDownAction::make(),
                     SiteMaintenanceUpAction::make(),
