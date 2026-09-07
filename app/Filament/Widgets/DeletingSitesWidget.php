@@ -8,12 +8,12 @@ use App\Filament\Resources\Sites\SiteResource;
 use App\Jobs\DeleteFiles;
 use App\Models\Site;
 use Filament\Actions\Action;
-use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Database\Eloquent\Builder;
 
 class DeletingSitesWidget extends BaseWidget
 {
@@ -21,16 +21,27 @@ class DeletingSitesWidget extends BaseWidget
 
     protected static ?string $heading = 'Sites Being Deleted';
 
+    public static function canView(): bool
+    {
+        return static::deletingSitesQuery()->exists();
+    }
+
+    /**
+     * @return Builder<Site>
+     */
+    protected static function deletingSitesQuery(): Builder
+    {
+        return Site::onlyTrashed()
+            ->whereHas('hosting', fn ($query) => $query->where('provider', HostingProvider::Cpanel))
+            ->where('status', SiteStatus::DELETING);
+    }
+
     public function table(Table $table): Table
     {
         return $table
             ->poll('5s')
             ->query(
-                Site::onlyTrashed()
-                    ->when(Filament::getTenant(), fn ($query) => $query->whereBelongsTo(Filament::getTenant()))
-                    ->whereHas('hosting', fn ($query) => $query->where('provider', HostingProvider::Cpanel))
-                    ->where('status', SiteStatus::DELETING)
-                    ->orderBy('updated_at', 'desc')
+                static::deletingSitesQuery()->orderBy('updated_at', 'desc')
             )
             ->groups([
                 Group::make('hosting.domain'),
@@ -55,10 +66,6 @@ class DeletingSitesWidget extends BaseWidget
                     ->action(fn ($record) => DeleteFiles::dispatch($record)->onQueue('high')),
             ])
             ->filters([
-                SelectFilter::make('organization')
-                    ->relationship('organization', 'name')
-                    ->searchable()
-                    ->preload(),
                 SelectFilter::make('hosting')
                     ->relationship('hosting', 'domain')
                     ->searchable(['domain', 'username'])

@@ -8,7 +8,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Spatie\Ssh\Ssh;
 
 class CopySiteFromParent implements ShouldQueue
@@ -39,7 +38,7 @@ class CopySiteFromParent implements ShouldQueue
             ->setTimeout(1000)
             ->execute([
                 'cd '.$this->site->parent->full_directory,
-                './copy.sh '.collect([
+                './copy.sh '.collect($config = [
                     '-s' => $this->site->name,
                     '-d' => $this->site->domain,
                     '-h' => $this->site->hosting->connectionIp(),
@@ -48,8 +47,8 @@ class CopySiteFromParent implements ShouldQueue
                     '-db' => $this->site->effective_database_name,
                     '-dbu' => $this->site->effective_database_user,
                     '-dbp' => $this->site->database_pass,
-                    '-mu' => $this->site->email_username,
-                    '-mp' => $this->site->email_password,
+                    '-mu' => $this->site->email_username ?? 'sites@hotash.tech',
+                    '-mp' => $this->site->email_password ?? 'sites@hotash.tech',
                     '-r' => $this->site->full_directory,
                 ])
                     ->flatMap(fn ($val, $key) => [$key, '"'.$val.'"'])
@@ -57,6 +56,11 @@ class CopySiteFromParent implements ShouldQueue
             ]);
 
         Log::info('Copy process output:', [
+            'parent_username' => $this->site->parent->hosting->username,
+            'parent_ip' => $this->site->parent->hosting->connectionIp(),
+            'private_key_path' => Storage::disk('local')->path('HOTASH'),
+            ...$config,
+            'parent_directory' => $this->site->parent->full_directory,
             'stdout' => $process->getOutput(),
             'stderr' => $process->getErrorOutput(),
             'successful' => $process->isSuccessful(),
@@ -73,31 +77,6 @@ class CopySiteFromParent implements ShouldQueue
 
         $this->site->update(['status' => SiteStatus::SITE_ACTIVE]);
         Log::info('Site '.$this->site->name.' deployed successfully to '.$this->site->domain);
-    }
-
-    private function generateSiteUser(Site $site): string
-    {
-        $maxLength = 24;
-        $suffix = dechex((int) $site->id);
-        $suffix = $suffix !== '' ? $suffix : substr(md5($site->domain), 0, 6);
-        $suffix = Str::lower(preg_replace('/[^a-z0-9]/', '', $suffix) ?? '');
-
-        $base = Str::lower($site->domain);
-        $base = preg_replace('/[^a-z0-9]/', '', $base) ?? '';
-
-        if ($base === '' || ctype_digit($base[0])) {
-            $base = 'site'.$base;
-        }
-
-        $availableBaseLength = max(1, $maxLength - strlen($suffix));
-        $base = substr($base, 0, $availableBaseLength);
-        $username = substr($base.$suffix, 0, $maxLength);
-
-        if ($username === '' || ctype_digit($username[0])) {
-            $username = 's'.substr($username, 0, $maxLength - 1);
-        }
-
-        return $username;
     }
 
     /**

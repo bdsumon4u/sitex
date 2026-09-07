@@ -5,6 +5,9 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Tenancy\EditOrganizationProfile;
 use App\Filament\Pages\Tenancy\RegisterOrganization;
 use App\Filament\Widgets\DeletingSitesWidget;
+use App\Filament\Widgets\HostingsRenewingWithinWeekWidget;
+use App\Filament\Widgets\MaintenanceModeSitesWidget;
+use App\Filament\Widgets\SitesRenewingWithinWeekWidget;
 use App\Models\Organization;
 use Filament\Actions\Action;
 use Filament\FontProviders\GoogleFontProvider;
@@ -16,8 +19,6 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Database\Eloquent\Model;
@@ -57,6 +58,9 @@ class OrgPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
+                HostingsRenewingWithinWeekWidget::class,
+                SitesRenewingWithinWeekWidget::class,
+                MaintenanceModeSitesWidget::class,
                 DeletingSitesWidget::class,
                 // AccountWidget::class,
                 // FilamentInfoWidget::class,
@@ -76,7 +80,6 @@ class OrgPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->strictAuthorization()
-            // ->tenantMenu(false)
             ->tenantMenuItems([
                 'profile' => fn (Action $action): Action => $action->label(__('Settings')),
             ])

@@ -119,32 +119,125 @@ class CpanelProvider implements HasEmailSupport, HostingProvider, NeedsSshAuthor
 
     public function authorizeSshKey(Hosting $hosting): void
     {
-        $ftp = $hosting->ftp();
-        $key = Storage::disk('local')->get('HOTASH');
-        $publicKey = Storage::disk('local')->get('HOTASH.pub');
+        try {
+            $ftp = $hosting->ftp();
+            $key = Storage::disk('local')->get('HOTASH');
+            $publicKey = Storage::disk('local')->get('HOTASH.pub');
 
-        $ftp->put('.ssh/HOTASH', $key, 'private');
-        $ftp->put('.ssh/HOTASH.pub', $publicKey, 'private');
+            $ftp->put('.ssh/HOTASH', $key, 'private');
+            $ftp->put('.ssh/HOTASH.pub', $publicKey, 'private');
 
-        Log::info('Importing SSH key for '.$hosting->domain);
-        $importResponse = $this->cpanelApiCall($hosting, 'SSH', 'importkey', [
-            'name' => 'HOTASH',
-            'key' => $publicKey,
-            'type' => 'public',
-        ], 'cpanelresult');
+            Log::info('Importing SSH key for '.$hosting->domain);
+            $importResponse = $this->cpanelApiCall($hosting, 'SSH', 'importkey', [
+                'name' => 'HOTASH',
+                'key' => $publicKey,
+                'type' => 'public',
+            ], 'cpanelresult');
 
-        if (array_key_exists('error', $importResponse)) {
-            Log::error('Failed to import SSH key: '.$importResponse['error']);
+            if (array_key_exists('error', $importResponse)) {
+                Log::error('Failed to import SSH key: '.$importResponse['error']);
+            }
+
+            Log::info('Authorizing SSH key for '.$hosting->domain);
+            $authorizeResponse = $this->cpanelApiCall($hosting, 'SSH', 'authkey', [
+                'key' => 'HOTASH',
+                'action' => 'authorize',
+            ], 'cpanelresult');
+
+            if (array_key_exists('error', $authorizeResponse)) {
+                Log::error('Failed to authorize SSH key: '.$authorizeResponse['error']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to authorize SSH key: '.$e->getMessage());
+        }
+    }
+
+    public function toggleCronJob(Site $site, bool $enable): void
+    {
+        $cronCmd = "cd {$site->full_directory} && ./php artisan schedule:run >> /dev/null 2>&1";
+
+        try {
+            $cronList = $this->cpanelApiCall($site->hosting, 'Cron', 'listcron', [], 'cpanelresult');
+            $data = $cronList['data'] ?? [];
+
+            // Remove existing matching crons
+            foreach ($data as $item) {
+                $command = $item['command'] ?? '';
+                if (str_contains($command, $site->full_directory) || str_contains($command, $site->domain)) {
+                    if (isset($item['line'])) {
+                        $this->cpanelApiCall($site->hosting, 'Cron', 'remove_line', [
+                            'line' => (string) $item['line'],
+                        ], 'cpanelresult');
+                    }
+                }
+            }
+
+            if ($enable) {
+                $this->cpanelApiCall($site->hosting, 'Cron', 'add_line', [
+                    'command' => $cronCmd,
+                    'day' => '*',
+                    'hour' => '*',
+                    'minute' => '*',
+                    'month' => '*',
+                    'weekday' => '*',
+                ], 'cpanelresult');
+            }
+
+            Log::info("cPanel Cron toggled successfully for site {$site->domain}", ['enable' => $enable]);
+        } catch (\Throwable $e) {
+            Log::warning("cPanel API Cron toggle failed: {$e->getMessage()}. Attempting user-level SSH crontab fallback.");
+            $this->toggleCronViaUserSsh($site, $enable);
+        }
+    }
+
+    private function toggleCronViaUserSsh(Site $site, bool $enable): void
+    {
+        $sitePath = rtrim($site->full_directory, '/');
+        $enableFlag = $enable ? '1' : '0';
+
+        $sshScript = <<<BASH
+set -e
+site_path="{$sitePath}"
+enable="{$enableFlag}"
+
+php_exec="./php"
+if [ ! -x "\$php_exec" ]; then
+    php_exec="\$(command -v php || echo 'php')"
+fi
+
+cron_cmd="* * * * * cd \$site_path && \$php_exec artisan schedule:run >> /dev/null 2>&1"
+
+if command -v crontab >/dev/null 2>&1; then
+    current_crontab="\$(crontab -l 2>/dev/null || true)"
+    filtered="\$(echo "\$current_crontab" | grep -vF "{$site->domain}" | grep -vF "\$site_path" || true)"
+
+    if [ "\$enable" = "1" ]; then
+        new_crontab="\$(printf "%s\n%s" "\$filtered" "\$cron_cmd" | sed '/^$/d')"
+    else
+        new_crontab="\$(echo "\$filtered" | sed '/^$/d')"
+    fi
+
+    echo "\$new_crontab" | crontab - || true
+fi
+BASH;
+
+        $keyPath = Storage::disk('local')->path('HOTASH');
+        if (! file_exists($keyPath)) {
+            Log::error('SSH private key HOTASH does not exist at path: '.$keyPath);
+
+            return;
         }
 
-        Log::info('Authorizing SSH key for '.$hosting->domain);
-        $authorizeResponse = $this->cpanelApiCall($hosting, 'SSH', 'authkey', [
-            'key' => 'HOTASH',
-            'action' => 'authorize',
-        ], 'cpanelresult');
+        $process = Ssh::create($site->hosting->username, $site->hosting->connectionIp())
+            ->usePrivateKey($keyPath)
+            ->disablePasswordAuthentication()
+            ->disableStrictHostKeyChecking()
+            ->usePort($site->hosting->sshPort())
+            ->setTimeout(60)
+            ->execute([$sshScript]);
 
-        if (array_key_exists('error', $authorizeResponse)) {
-            Log::error('Failed to authorize SSH key: '.$authorizeResponse['error']);
+        if (! $process->isSuccessful()) {
+            Log::error('User-level SSH crontab toggle failed: '.$process->getErrorOutput());
         }
     }
 

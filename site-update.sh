@@ -9,7 +9,7 @@ STATUS_FILE="$STATE_DIR/status.json"
 LOCK_FILE="$STATE_DIR/update.lock"
 MAX_RETRIES=2
 RETRY_WAIT_SECONDS=5
-FORCE_RESET="${SITE_UPDATER_FORCE_RESET:-0}"
+FORCE_RESET="${SITE_UPDATER_FORCE_RESET:-1}"
 
 mkdir -p "$STATE_DIR"
 mkdir -p "$APP_DIR/storage/logs"
@@ -129,83 +129,70 @@ export COMPOSER_HOME="${COMPOSER_HOME:-$APP_DIR/storage/app/.composer}"
 export COMPOSER_ALLOW_SUPERUSER=1
 mkdir -p "$COMPOSER_HOME"
 
-remote_name=$("$GIT_BIN" remote | head -n 1)
-branch_name=$("$GIT_BIN" rev-parse --abbrev-ref HEAD)
-
-if [ -z "$remote_name" ] || [ -z "$branch_name" ]; then
-  update_status "failed" "Could not detect git remote or branch." "" "" "unknown" "false" "false"
-  exit 1
+remote_name=$("$GIT_BIN" remote | head -n 1 2>/dev/null || echo "origin")
+if [ -z "$remote_name" ]; then
+  remote_name="origin"
 fi
 
-remote_url=$("$GIT_BIN" remote get-url "$remote_name")
-echo "Remote: $remote_name ($remote_url)"
+branch_name=$("$GIT_BIN" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+if [ -z "$branch_name" ] || [ "$branch_name" = "HEAD" ]; then
+  branch_name="main"
+fi
+
+remote_url=$("$GIT_BIN" remote get-url "$remote_name" 2>/dev/null || true)
+echo "Remote: $remote_name (${remote_url:-unknown})"
 echo "Branch: $branch_name"
 
-if ! retry_command "\"$GIT_BIN\" fetch \"$remote_name\" --prune" "git fetch"; then
-  update_status "failed" "Failed to fetch latest commits from remote." "" "" "unknown" "false" "false"
-  exit 1
-fi
+# Explicitly fetch remote branch and prune
+retry_command "\"$GIT_BIN\" fetch \"$remote_name\" \"$branch_name\" --prune 2>/dev/null || \"$GIT_BIN\" fetch \"$remote_name\" --prune" "git fetch" || true
 
-local_commit=$("$GIT_BIN" rev-parse HEAD)
-remote_commit=$("$GIT_BIN" rev-parse "${remote_name}/${branch_name}" 2>/dev/null || true)
-
-if [ -z "$remote_commit" ]; then
-  remote_commit=$("$GIT_BIN" rev-parse @{u} 2>/dev/null || true)
-fi
-
-if [ -z "$local_commit" ] || [ -z "$remote_commit" ]; then
-  update_status "failed" "Could not read local or remote commit hash." "" "" "unknown" "false" "false"
-  exit 1
-fi
-
-merge_base=$("$GIT_BIN" merge-base HEAD "${remote_name}/${branch_name}" 2>/dev/null || true)
-sync_state="diverged"
-requires_force_reset="false"
-force_reset_used="false"
-
-if [ "$local_commit" = "$remote_commit" ]; then
-  sync_state="up_to_date"
-  update_status "completed" "Already up to date." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
-  exit 0
-fi
-
-if [ "$merge_base" = "$local_commit" ]; then
-  sync_state="fast_forward_available"
-elif [ "$merge_base" = "$remote_commit" ]; then
-  sync_state="local_ahead_only"
-  requires_force_reset="true"
+# Determine target commit SHA
+target_commit=""
+if "$GIT_BIN" rev-parse --verify "${remote_name}/${branch_name}" >/dev/null 2>&1; then
+  target_commit=$("$GIT_BIN" rev-parse "${remote_name}/${branch_name}")
+elif "$GIT_BIN" rev-parse --verify "FETCH_HEAD" >/dev/null 2>&1; then
+  target_commit=$("$GIT_BIN" rev-parse "FETCH_HEAD")
+elif "$GIT_BIN" rev-parse --verify "${remote_name}/main" >/dev/null 2>&1; then
+  target_commit=$("$GIT_BIN" rev-parse "${remote_name}/main")
+  branch_name="main"
+elif "$GIT_BIN" rev-parse --verify "${remote_name}/master" >/dev/null 2>&1; then
+  target_commit=$("$GIT_BIN" rev-parse "${remote_name}/master")
+  branch_name="master"
 else
-  sync_state="diverged"
-  requires_force_reset="true"
+  target_commit=$("$GIT_BIN" rev-parse HEAD 2>/dev/null || echo "")
 fi
 
-if [ "$requires_force_reset" = "true" ]; then
-  if [ "$FORCE_RESET" != "1" ]; then
-    update_status "failed" "Remote history changed. Hard reset confirmation is required." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
-    exit 1
-  fi
-
-  force_reset_used="true"
+if [ -z "$target_commit" ]; then
+  update_status "failed" "Could not determine a valid target commit SHA to reset to." "" "" "unknown" "false" "false"
+  exit 1
 fi
 
-update_status "running" "Update available. Starting deployment..." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
+short_target=$(echo "$target_commit" | cut -c1-7)
+echo "Target Commit SHA: $target_commit ($short_target) on branch: $branch_name"
+
+local_commit=$("$GIT_BIN" rev-parse HEAD 2>/dev/null || echo "")
+remote_commit="$target_commit"
+
+sync_state="force_reset"
+requires_force_reset="true"
+force_reset_used="true"
+
+update_status "running" "Starting deployment and resetting to $short_target..." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
 
 "$PHP_BIN" artisan down || true
 
-if [ "$requires_force_reset" = "true" ] && [ "$FORCE_RESET" = "1" ]; then
-  backup_branch="backup/pre-reset-$(date '+%Y%m%d%H%M%S')"
-  "$GIT_BIN" branch "$backup_branch" HEAD || true
+backup_branch="backup/pre-reset-$(date '+%Y%m%d%H%M%S')"
+"$GIT_BIN" branch "$backup_branch" HEAD 2>/dev/null || true
 
-  if ! retry_command "\"$GIT_BIN\" reset --hard \"${remote_name}/${branch_name}\"" "git hard reset"; then
-    update_status "failed" "git reset --hard failed." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
-    exit 1
-  fi
-else
-  if ! retry_command "\"$GIT_BIN\" pull --ff-only \"$remote_name\" \"$branch_name\"" "git pull"; then
-    update_status "failed" "git pull failed." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
-    exit 1
-  fi
+# Attach HEAD to branch and force reset to the exact commit SHA
+"$GIT_BIN" checkout -B "$branch_name" "$target_commit" 2>/dev/null || true
+
+if ! retry_command "\"$GIT_BIN\" reset --hard \"$target_commit\"" "git hard reset"; then
+  update_status "failed" "git reset --hard failed to $short_target." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
+  exit 1
 fi
+
+"$GIT_BIN" clean -fd -e .env -e storage/ 2>/dev/null || true
 
 if [ -f "$APP_DIR/composer.json" ] && [ -n "$COMPOSER_BIN" ]; then
   if ! retry_command "\"$COMPOSER_BIN\" install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress" "composer install"; then
@@ -243,7 +230,7 @@ if ! retry_command "\"$PHP_BIN\" artisan view:cache" "view cache"; then
   exit 1
 fi
 
-local_commit=$("$GIT_BIN" rev-parse HEAD)
-remote_commit=$("$GIT_BIN" rev-parse "${remote_name}/${branch_name}" 2>/dev/null || true)
-update_status "completed" "Update completed successfully." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
+local_commit=$("$GIT_BIN" rev-parse HEAD 2>/dev/null || true)
+update_status "completed" "Update completed successfully to $short_target." "$local_commit" "$remote_commit" "$sync_state" "$requires_force_reset" "$force_reset_used"
 echo "Deploy completed at $(date '+%Y-%m-%d %H:%M:%S')"
+

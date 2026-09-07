@@ -19,6 +19,8 @@ class Site extends Model
     use LogsActivity;
     use SoftDeletes;
 
+    public const UPDATED_AT = null;
+
     protected $hidden = [
         // 'email_password',
         // 'database_pass',
@@ -30,9 +32,14 @@ class Site extends Model
             'organization_id' => 'integer',
             'parent_id' => 'integer',
             'hosting_id' => 'integer',
+            'site_user' => 'string',
+            'site_password' => 'encrypted',
             'email_password' => 'encrypted',
             'database_pass' => 'encrypted',
             'status' => SiteStatus::class,
+            'laravel_maintenance_mode' => 'boolean',
+            'cron_enabled' => 'boolean',
+            'renew_date' => 'date',
         ];
     }
 
@@ -44,6 +51,11 @@ class Site extends Model
     public function hosting(): BelongsTo
     {
         return $this->belongsTo(Hosting::class);
+    }
+
+    public function allowsRemoteArtisanMaintenance(): bool
+    {
+        return $this->status === SiteStatus::SITE_ACTIVE;
     }
 
     public function getUsernameAttribute(): string
@@ -87,6 +99,5 @@ class Site extends Model
         return LogOptions::defaults()
             ->logAll()
             ->useLogName('site');
-        // Chain fluent methods for configuration options
     }
 }

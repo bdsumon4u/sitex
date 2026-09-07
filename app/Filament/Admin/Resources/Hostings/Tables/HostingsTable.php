@@ -33,6 +33,11 @@ class HostingsTable
                     ->formatStateUsing(function (Model $record, string $state) {
                         return $record->sites_count.' / '.$state;
                     }),
+                TextColumn::make('renew_date')
+                    ->label(__('Renew date'))
+                    ->date()
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

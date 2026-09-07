@@ -41,6 +41,7 @@ class Hosting extends Model
             'password' => 'encrypted',
             'token' => 'encrypted',
             'site_limit' => 'integer',
+            'renew_date' => 'date',
             'ftp_port' => 'integer',
             'ssh_port' => 'integer',
         ];
@@ -86,7 +87,7 @@ class Hosting extends Model
             'password' => $this->password,
             // Optional but recommended
             'port' => $this->ftpPort(),
-            'root' => env('FTP_ROOT', '/'),
+            'root' => config('site.ftp_root', '/'),
             'passive' => true,
             'ssl' => false,
             'timeout' => 30,
@@ -121,12 +122,16 @@ class Hosting extends Model
 
     public function copySshKey(): void
     {
+        info('Calling copySshKey for method on Hosting model for hosting: '.$this->domain);
         $provider = app(HostingProviderResolver::class)->resolve($this);
 
         if (! $provider instanceof NeedsSshAuthorization) {
+            info('Provider does not implement NeedsSshAuthorization interface');
+
             return;
         }
 
+        info('Calling authorizeSshKey method on provider: '.$provider::class);
         $provider->authorizeSshKey($this);
     }
 }

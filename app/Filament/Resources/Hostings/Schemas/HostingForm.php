@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Hostings\Schemas;
 
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -33,6 +34,11 @@ class HostingForm
                     ->required()
                     ->numeric()
                     ->default(1),
+                DatePicker::make('renew_date')
+                    ->label(__('Renew date'))
+                    ->native(false)
+                    ->displayFormat('M j, Y')
+                    ->nullable(),
                 TextInput::make('ssh_port')
                     ->required()
                     ->numeric()

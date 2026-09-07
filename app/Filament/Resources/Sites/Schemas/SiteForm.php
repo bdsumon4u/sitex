@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Sites\Schemas;
 use App\Enums\HostingProvider;
 use App\Models\Hosting;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -183,39 +184,51 @@ class SiteForm
         return $get($statePrefix.'hosting_provider') === HostingProvider::CloudPanel->value;
     }
 
-    protected static function syncHostingState(Get $get, Set $set, mixed $state): void
+    /**
+     * @return array{hosting_domain: string, limit: int, hosting_provider: string|null}
+     */
+    protected static function hostingDerivedStateFromModel(Hosting $hosting): array
     {
-        if (! $state) {
-            $set('hosting_domain', null);
-            $set('limit', null);
-            $set('hosting_provider', null);
+        return [
+            'hosting_domain' => $hosting->domain,
+            'limit' => max($hosting->site_limit - $hosting->sites_count, 0),
+            'hosting_provider' => $hosting->provider?->value ?? $hosting->provider,
+        ];
+    }
 
-            return;
+    /**
+     * @return array{hosting_domain: string|null, limit: int|null, hosting_provider: string|null}
+     */
+    public static function hostingDerivedState(int|string|null $hostingId): array
+    {
+        if ($hostingId === null || $hostingId === '') {
+            return [
+                'hosting_domain' => null,
+                'limit' => null,
+                'hosting_provider' => null,
+            ];
         }
 
         $hosting = Hosting::select([
-            'id',
-            'domain',
-            'provider',
-            'site_limit',
-        ])->withCount('sites')->findOrFail($state);
+            'id', 'domain', 'provider', 'site_limit',
+        ])->withCount('sites')->find((int) $hostingId);
 
-        $set('hosting_domain', $hosting->domain);
-        $set('limit', max($hosting->site_limit - $hosting->sites_count, 0));
-        $set('hosting_provider', $hosting->provider?->value ?? $hosting->provider);
-
-        if (
-            ($hosting->provider?->value ?? $hosting->provider) === HostingProvider::CloudPanel->value
-            && blank($get('site_user'))
-            && filled($get('domain'))
-        ) {
-            $siteUser = Str::lower((string) preg_replace('/[^a-z0-9]/', '', (string) $get('domain')));
-            if ($siteUser === '' || ctype_digit($siteUser[0])) {
-                $siteUser = 'site'.$siteUser;
-            }
-
-            $set('site_user', substr($siteUser, 0, 24));
+        if (! $hosting) {
+            return [
+                'hosting_domain' => null,
+                'limit' => null,
+                'hosting_provider' => null,
+            ];
         }
+
+        return self::hostingDerivedStateFromModel($hosting);
+    }
+
+    protected static function applyHostingDerivedState(Set $set, array $derived): void
+    {
+        $set('hosting_domain', $derived['hosting_domain']);
+        $set('limit', $derived['limit']);
+        $set('hosting_provider', $derived['hosting_provider']);
     }
 
     protected static function hostingField(): Component
@@ -231,8 +244,41 @@ class SiteForm
             ->getOptionLabelFromRecordUsing(function (?Model $record) {
                 return $record ? $record->domain.' ('.$record->sites_count.' / '.$record->site_limit.')' : '';
             })
-            ->afterStateHydrated(fn (Get $get, Set $set, mixed $state) => self::syncHostingState($get, $set, $state))
-            ->afterStateUpdated(fn (Get $get, Set $set, mixed $state) => self::syncHostingState($get, $set, $state))
+            ->afterStateHydrated(function (Get $get, Set $set, mixed $state): void {
+                if (! $state) {
+                    self::applyHostingDerivedState($set, self::hostingDerivedState(null));
+
+                    return;
+                }
+
+                self::applyHostingDerivedState($set, self::hostingDerivedState($state));
+            })
+            ->afterStateUpdated(function (Get $get, Set $set, mixed $state): void {
+                if (! $state) {
+                    self::applyHostingDerivedState($set, self::hostingDerivedState(null));
+
+                    return;
+                }
+
+                $hosting = Hosting::select([
+                    'id', 'domain', 'provider', 'site_limit',
+                ])->withCount('sites')->findOrFail($state);
+                $derived = self::hostingDerivedStateFromModel($hosting);
+                self::applyHostingDerivedState($set, $derived);
+
+                if (
+                    $derived['hosting_provider'] === HostingProvider::CloudPanel->value
+                    && blank($get('site_user'))
+                    && filled($get('domain'))
+                ) {
+                    $siteUser = Str::lower((string) preg_replace('/[^a-z0-9]/', '', (string) $get('domain')));
+                    if ($siteUser === '' || ctype_digit($siteUser[0])) {
+                        $siteUser = 'site'.$siteUser;
+                    }
+
+                    $set('site_user', substr($siteUser, 0, 24));
+                }
+            })
             ->hint(function (Get $get) {
                 if (! is_null($get('limit'))) {
                     return $get('limit').' slot(s) remaining';
@@ -279,6 +325,18 @@ class SiteForm
             ->required();
     }
 
+    protected static function renewDateField(string $statePrefix = ''): Component
+    {
+        return DatePicker::make('renew_date')
+            ->label(__('Renew date'))
+            ->native(false)
+            ->displayFormat('M j, Y')
+            ->nullable()
+            ->disabled(function (Get $get) use ($statePrefix) {
+                return ! $get($statePrefix.'hosting_id') || ! $get($statePrefix.'limit');
+            });
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -291,6 +349,8 @@ class SiteForm
                         ->columnSpanFull(),
                     self::domainField(),
                     self::directoryField(),
+                    self::renewDateField()
+                        ->columnSpanFull(),
                 ])
                     ->dense()
                     ->columns(2)

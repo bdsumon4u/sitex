@@ -18,10 +18,24 @@ class SiteInfolist
                 TextEntry::make('name'),
                 TextEntry::make('domain'),
                 TextEntry::make('directory'),
+                TextEntry::make('renew_date')
+                    ->label(__('Renew date'))
+                    ->date()
+                    ->placeholder('-'),
                 TextEntry::make('email_username'),
                 TextEntry::make('database_name'),
                 TextEntry::make('status')
                     ->badge(),
+                TextEntry::make('laravel_maintenance_mode')
+                    ->label(__('Laravel maintenance'))
+                    ->formatStateUsing(fn (?bool $state): string => $state ? __('Yes (artisan down)') : __('No (live)'))
+                    ->badge()
+                    ->color(fn (?bool $state): string => $state ? 'warning' : 'success'),
+                TextEntry::make('cron_enabled')
+                    ->label(__('Cron status'))
+                    ->formatStateUsing(fn (?bool $state): string => $state ? __('Active') : __('Disabled'))
+                    ->badge()
+                    ->color(fn (?bool $state): string => $state ? 'success' : 'gray'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

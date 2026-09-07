@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Hostings\Schemas;
 use App\Enums\HostingProvider;
 use App\Models\Hosting;
 use App\Models\Server;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -61,13 +62,16 @@ class HostingForm
                     ->label('Direct IP')
                     ->required(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::CloudPanel->value),
                 TextInput::make('domain')
+                    ->label(fn (Get $get): string => self::resolvedProvider($get) === HostingProvider::Cpanel->value ? 'Domain' : 'Hostname')
                     ->required(),
                 TextInput::make('username')
                     ->required()
-                    ->minLength(2),
+                    ->minLength(2)
+                    ->visible(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::Cpanel->value),
                 TextInput::make('password')
                     ->password()
-                    ->required(),
+                    ->required()
+                    ->visible(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::Cpanel->value),
                 TextInput::make('token')
                     ->required()
                     ->visible(fn (Get $get): bool => self::resolvedProvider($get) === HostingProvider::Cpanel->value),
@@ -83,6 +87,11 @@ class HostingForm
                     ->required()
                     ->numeric()
                     ->default(Hosting::DEFAULT_SITE_LIMIT),
+                DatePicker::make('renew_date')
+                    ->label(__('Renew date'))
+                    ->native(false)
+                    ->displayFormat('M j, Y')
+                    ->nullable(),
             ])
             ->columns(3);
     }

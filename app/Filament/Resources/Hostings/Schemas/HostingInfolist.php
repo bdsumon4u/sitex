@@ -27,6 +27,10 @@ class HostingInfolist
                     ->numeric(),
                 TextEntry::make('sites_count')
                     ->numeric(),
+                TextEntry::make('renew_date')
+                    ->label('Renew date')
+                    ->date()
+                    ->placeholder('-'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

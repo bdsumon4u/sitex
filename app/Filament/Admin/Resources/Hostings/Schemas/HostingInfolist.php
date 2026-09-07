@@ -32,6 +32,10 @@ class HostingInfolist
                     ->numeric(),
                 TextEntry::make('ssh_port')
                     ->numeric(),
+                TextEntry::make('renew_date')
+                    ->label('Renew date')
+                    ->date()
+                    ->placeholder('-'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

@@ -78,6 +78,7 @@ class SiteForm extends BaseSiteForm
                     self::directoryField(),
                     TextInput::make('service_id')
                         ->label('Service ID'),
+                    self::renewDateField(),
                     Select::make('status')
                         ->options(SiteStatus::class)
                         ->searchable()
@@ -88,14 +89,16 @@ class SiteForm extends BaseSiteForm
                     ->columnSpan(2),
                 Group::make([
                     self::emailSection()
+                        ->collapsed(false)
                         ->columns(2)
-                        ->columnSpan(1),
+                        ->columnSpanFull(),
                     self::siteUserField(),
                     self::sitePasswordField(),
                     self::databaseSection()
                         ->columns(3)
-                        ->columnSpan(1),
+                        ->columnSpanFull(),
                 ])
+                    ->columns(2)
                     ->dense()
                     ->columnSpan(3),
             ])

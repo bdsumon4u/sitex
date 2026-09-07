@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Hostings\Tables;
 
-use App\Models\Hosting;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -31,6 +30,11 @@ class HostingsTable
                     ->formatStateUsing(function (Model $record, string $state) {
                         return $record->sites()->count().' / '.$state;
                     }),
+                TextColumn::make('renew_date')
+                    ->label(__('Renew date'))
+                    ->date()
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

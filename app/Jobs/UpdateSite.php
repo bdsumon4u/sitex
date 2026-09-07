@@ -40,7 +40,12 @@ class UpdateSite implements ShouldQueue
                 ->setTimeout(700)
                 ->execute([
                     'cd '.$this->site->full_directory,
-                    './server_deploy.sh',
+                    'git config --global --add safe.directory "$(pwd)" 2>/dev/null || true',
+                    'remote_name=$(git remote 2>/dev/null | head -n 1 || echo "origin")',
+                    'git fetch "$remote_name" --prune 2>/dev/null || true',
+                    'if git rev-parse --verify "${remote_name}/main" >/dev/null 2>&1; then export SITE_UPDATER_TARGET_COMMIT="${remote_name}/main"; elif git rev-parse --verify "${remote_name}/master" >/dev/null 2>&1; then export SITE_UPDATER_TARGET_COMMIT="${remote_name}/master"; else export SITE_UPDATER_TARGET_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo ""); fi',
+                    'export SITE_UPDATER_FORCE_RESET=1',
+                    'if [ -f ./server_deploy.sh ]; then chmod +x ./server_deploy.sh && ./server_deploy.sh; elif [ -f ./site-update.sh ]; then chmod +x ./site-update.sh && ./site-update.sh; else echo "No deploy script found"; exit 1; fi',
                 ]);
 
             if (! $process->isSuccessful()) {
@@ -55,7 +60,10 @@ class UpdateSite implements ShouldQueue
                     .' Standard output: '.($standardOutput !== '' ? $standardOutput : '[none]')
                 );
             }
-            $this->site->update(['status' => SiteStatus::SITE_ACTIVE]);
+            $this->site->update([
+                'status' => SiteStatus::SITE_ACTIVE,
+                'updated_at' => now(),
+            ]);
         } catch (\Exception $e) {
             $this->site->update(['status' => SiteStatus::UPDATE_FAILED]);
             throw new \RuntimeException('Update failed during remote deploy execution. Error: '.$e->getMessage());

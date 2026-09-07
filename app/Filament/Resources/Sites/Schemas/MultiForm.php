@@ -39,6 +39,18 @@ class MultiForm extends SiteForm
                             $set("sites.{$index}.database_pass", $state);
                         }
                     }),
+                TextInput::make('site_password')
+                    ->label('Site Password')
+                    ->password()
+                    ->revealable()
+                    ->default('Hotash<Site>Password')
+                    ->visible(fn (Get $get): bool => self::isCloudPanelHosting($get))
+                    ->live()
+                    ->afterStateUpdated(function (Get $get, Set $set, mixed $state) {
+                        foreach ($get('sites') ?? [] as $index => $site) {
+                            $set("sites.{$index}.site_password", $state);
+                        }
+                    }),
                 Repeater::make('sites')
                     ->label('Sites')
                     ->helperText(function (Get $get) {
@@ -66,6 +78,8 @@ class MultiForm extends SiteForm
                     Group::make([
                         self::domainField('../../'),
                         self::directoryField('../../'),
+                        self::renewDateField('../../')
+                            ->columnSpanFull(),
                         self::emailSection('../../')
                             ->columns(2)
                             ->columnSpanFull(),
