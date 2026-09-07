@@ -2,15 +2,15 @@
 
 namespace App\Filament\Resources\Sites\Pages\Actions;
 
+use App\Models\Hosting;
 use Filament\Actions\Action;
 use Filament\Support\Colors\Color;
-use Illuminate\Support\Facades\Storage;
 
 class CopySshPubKeyAction extends Action
 {
     public static function make(?string $name = 'copy-ssh-pub-key'): static
     {
-        $publicKey = Storage::drive('local')->get('HOTASH.pub');
+        $publicKey = Hosting::sshPublicKey();
 
         if (! $publicKey) {
             return parent::make($name)

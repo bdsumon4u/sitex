@@ -162,7 +162,7 @@ class CloudPanelProvider implements HasSiteUser, HostingProviderContract
         }
 
         $process = Ssh::create((string) ($hosting->username ?: 'root'), $hosting->connectionIp())
-            ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
+            ->usePrivateKey(Hosting::sshPrivateKeyPath() ?? Storage::disk('local')->path('HOTASH'))
             ->disablePasswordAuthentication()
             ->disableStrictHostKeyChecking()
             ->usePort($hosting->sshPort())
@@ -281,7 +281,7 @@ class CloudPanelProvider implements HasSiteUser, HostingProviderContract
         ]);
 
         $process = Ssh::create((string) ($hosting->username ?: 'root'), $hosting->connectionIp())
-            ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
+            ->usePrivateKey(Hosting::sshPrivateKeyPath() ?? Storage::disk('local')->path('HOTASH'))
             ->disablePasswordAuthentication()
             ->disableStrictHostKeyChecking()
             ->usePort($hosting->sshPort())

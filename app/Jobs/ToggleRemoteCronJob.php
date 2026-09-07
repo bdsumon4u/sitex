@@ -10,7 +10,6 @@ use App\Services\HostingProviders\CpanelProvider;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Spatie\Ssh\Ssh;
 use Throwable;
 
@@ -127,9 +126,9 @@ if command -v crontab >/dev/null 2>&1; then
 fi
 BASH;
 
-            $keyPath = Storage::disk('local')->path('HOTASH');
-            if (! file_exists($keyPath)) {
-                Log::error('SSH private key HOTASH does not exist at path: '.$keyPath);
+            $keyPath = Hosting::sshPrivateKeyPath();
+            if (! $keyPath || ! file_exists($keyPath)) {
+                Log::error('SSH private key does not exist for toggle remote cron.');
 
                 return;
             }

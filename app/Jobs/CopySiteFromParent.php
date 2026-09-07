@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\SiteStatus;
+use App\Models\Hosting;
 use App\Models\Site;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -32,7 +33,7 @@ class CopySiteFromParent implements ShouldQueue
     {
         Log::info('Deploying site '.$this->site->name.' to '.$this->site->domain);
         $process = Ssh::create($this->site->parent->hosting->username, $this->site->parent->hosting->connectionIp())
-            ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
+            ->usePrivateKey(Hosting::sshPrivateKeyPath() ?? Storage::disk('local')->path('HOTASH'))
             ->disablePasswordAuthentication()
             ->disableStrictHostKeyChecking()
             ->setTimeout(1000)

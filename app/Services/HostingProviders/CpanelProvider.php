@@ -12,7 +12,6 @@ use App\Services\HostingProviders\Contracts\HostingProvider;
 use App\Services\HostingProviders\Contracts\NeedsSshAuthorization;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CpanelProvider implements HasEmailSupport, HostingProvider, NeedsSshAuthorization
@@ -120,16 +119,30 @@ class CpanelProvider implements HasEmailSupport, HostingProvider, NeedsSshAuthor
     public function authorizeSshKey(Hosting $hosting): void
     {
         try {
-            $ftp = $hosting->ftp();
-            $key = Storage::disk('local')->get('HOTASH');
-            $publicKey = Storage::disk('local')->get('HOTASH.pub');
+            $keyName = Hosting::sshKeyName();
+            $privateKeyPath = Hosting::sshPrivateKeyPath();
+            $publicKey = Hosting::sshPublicKey();
 
-            $ftp->put('.ssh/HOTASH', $key, 'private');
-            $ftp->put('.ssh/HOTASH.pub', $publicKey, 'private');
+            if (! $privateKeyPath || ! $publicKey || ! file_exists($privateKeyPath)) {
+                Log::warning('SSH private or public key for '.$keyName.' was not found, skipping cPanel SSH key authorization.');
+
+                return;
+            }
+
+            $key = (string) file_get_contents($privateKeyPath);
+            if (trim($key) === '' || trim($publicKey) === '') {
+                Log::warning('SSH key content is empty, skipping cPanel SSH key authorization.');
+
+                return;
+            }
+
+            $ftp = $hosting->ftp();
+            $ftp->put('.ssh/'.$keyName, $key, 'private');
+            $ftp->put('.ssh/'.$keyName.'.pub', $publicKey, 'private');
 
             Log::info('Importing SSH key for '.$hosting->domain);
             $importResponse = $this->cpanelApiCall($hosting, 'SSH', 'importkey', [
-                'name' => 'HOTASH',
+                'name' => $keyName,
                 'key' => $publicKey,
                 'type' => 'public',
             ], 'cpanelresult');
@@ -140,14 +153,14 @@ class CpanelProvider implements HasEmailSupport, HostingProvider, NeedsSshAuthor
 
             Log::info('Authorizing SSH key for '.$hosting->domain);
             $authorizeResponse = $this->cpanelApiCall($hosting, 'SSH', 'authkey', [
-                'key' => 'HOTASH',
+                'key' => $keyName,
                 'action' => 'authorize',
             ], 'cpanelresult');
 
             if (array_key_exists('error', $authorizeResponse)) {
                 Log::error('Failed to authorize SSH key: '.$authorizeResponse['error']);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to authorize SSH key: '.$e->getMessage());
         }
     }
@@ -221,9 +234,9 @@ if command -v crontab >/dev/null 2>&1; then
 fi
 BASH;
 
-        $keyPath = Storage::disk('local')->path('HOTASH');
-        if (! file_exists($keyPath)) {
-            Log::error('SSH private key HOTASH does not exist at path: '.$keyPath);
+        $keyPath = Hosting::sshPrivateKeyPath();
+        if (! $keyPath || ! file_exists($keyPath)) {
+            Log::error('SSH private key does not exist for cPanel crontab toggle.');
 
             return;
         }

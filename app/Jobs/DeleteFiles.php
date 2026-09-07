@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\SiteStatus;
 use App\Jobs\Traits\CanDelete;
+use App\Models\Hosting;
 use App\Models\Site;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -44,7 +45,7 @@ class DeleteFiles implements ShouldQueue
 
             $deleteCommand = 'rm -rf '.escapeshellarg($this->site->full_directory);
             $process = Ssh::create($this->site->hosting->username, $this->site->hosting->connectionIp())
-                ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
+                ->usePrivateKey(Hosting::sshPrivateKeyPath() ?? Storage::disk('local')->path('HOTASH'))
                 ->disablePasswordAuthentication()
                 ->disableStrictHostKeyChecking()
                 ->usePort($this->site->hosting->sshPort())

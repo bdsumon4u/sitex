@@ -45,7 +45,7 @@ class RunRemoteArtisanMaintenance implements ShouldQueue
         ]);
 
         $process = Ssh::create($site->hosting->username, $site->hosting->connectionIp())
-            ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
+            ->usePrivateKey(Hosting::sshPrivateKeyPath() ?? Storage::disk('local')->path('HOTASH'))
             ->disablePasswordAuthentication()
             ->disableStrictHostKeyChecking()
             ->usePort($site->hosting->sshPort())

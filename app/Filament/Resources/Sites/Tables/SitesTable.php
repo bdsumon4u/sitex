@@ -13,6 +13,7 @@ use App\Filament\Resources\Sites\Tables\Actions\SiteAnonymousLoginAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteCronDisableAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteCronEnableAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteDeleteAction;
+use App\Filament\Resources\Sites\Tables\Actions\SiteEnvEditorAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteMaintenanceDownAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteMaintenanceUpAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteRedeployAction;
@@ -121,6 +122,7 @@ class SitesTable
             ->recordActions([
                 SiteAnonymousLoginAction::make()->openUrlInNewTab(),
                 ActionGroup::make([
+                    SiteEnvEditorAction::make(),
                     SiteCronEnableAction::make(),
                     SiteCronDisableAction::make(),
                     SiteMaintenanceDownAction::make(),

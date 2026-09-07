@@ -3,6 +3,7 @@
 namespace App\Jobs\Traits;
 
 use App\Enums\HostingProvider;
+use App\Models\User;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
@@ -15,7 +16,7 @@ trait CanDelete
             Notification::make()
                 ->title('Refusing to delete primary site '.$this->site->domain)
                 ->danger()
-                ->sendToDatabase(\App\Models\User::query()->get())
+                ->sendToDatabase(User::query()->get())
                 ->send();
 
             return false;

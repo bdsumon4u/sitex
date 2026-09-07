@@ -19,7 +19,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Operation;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
@@ -37,8 +36,8 @@ class SiteForm
                         TextInput::make('key_name')
                             ->label('Key Name')
                             ->hintColor(Color::Red)
-                            ->formatStateUsing(fn () => 'HOTASH')
-                            ->hint(new HtmlString('Must be <strong>HOTASH</strong>'))
+                            ->formatStateUsing(fn () => Hosting::sshKeyName())
+                            ->hint(new HtmlString('Must be <strong>'.Hosting::sshKeyName().'</strong>'))
                             ->hintIcon('heroicon-o-exclamation-circle'),
                         TextInput::make('private_key')
                             ->label('Private Key')
@@ -48,7 +47,7 @@ class SiteForm
                             ->hint('Empty'),
                     ]),
                 Textarea::make('public_key')
-                    ->formatStateUsing(fn () => Storage::drive('local')->get('HOTASH.pub'))
+                    ->formatStateUsing(fn () => Hosting::sshPublicKey() ?? '')
                     ->label('Public Key')
                     ->rows(8),
             ])

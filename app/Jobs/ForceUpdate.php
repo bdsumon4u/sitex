@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\SiteStatus;
+use App\Models\Hosting;
 use App\Models\Site;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -32,7 +33,7 @@ class ForceUpdate implements ShouldQueue
         try {
             $this->site->hosting->copySshKey();
             $process = Ssh::create($this->site->hosting->username, $this->site->hosting->connectionIp())
-                ->usePrivateKey(Storage::disk('local')->path('HOTASH'))
+                ->usePrivateKey(Hosting::sshPrivateKeyPath() ?? Storage::disk('local')->path('HOTASH'))
                 ->disablePasswordAuthentication()
                 ->disableStrictHostKeyChecking()
                 ->setTimeout(1000)

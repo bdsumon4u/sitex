@@ -14,7 +14,9 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class Hosting extends Model
 {
@@ -120,18 +122,76 @@ class Hosting extends Model
         return $this->ssh_port ?? (int) ($this->server?->ssh_port ?? self::DEFAULT_SSH_PORT);
     }
 
-    public function copySshKey(): void
+    public static function sshKeyName(): string
     {
-        info('Calling copySshKey for method on Hosting model for hosting: '.$this->domain);
-        $provider = app(HostingProviderResolver::class)->resolve($this);
+        return (string) config('site.ssh_key_name', 'HOTASH');
+    }
 
-        if (! $provider instanceof NeedsSshAuthorization) {
-            info('Provider does not implement NeedsSshAuthorization interface');
+    public static function sshPrivateKeyPath(): ?string
+    {
+        $keyName = static::sshKeyName();
+        $path = Storage::disk('local')->path($keyName);
 
-            return;
+        if (file_exists($path)) {
+            return $path;
         }
 
-        info('Calling authorizeSshKey method on provider: '.$provider::class);
-        $provider->authorizeSshKey($this);
+        $home = getenv('HOME') ?: ($_SERVER['HOME'] ?? '');
+        if ($home && file_exists($home.'/.ssh/'.$keyName)) {
+            $content = @file_get_contents($home.'/.ssh/'.$keyName);
+            if ($content !== false && $content !== '') {
+                Storage::disk('local')->put($keyName, $content);
+                @chmod($path, 0600);
+            }
+
+            return file_exists($path) ? $path : $home.'/.ssh/'.$keyName;
+        }
+
+        return null;
+    }
+
+    public static function sshPublicKey(): ?string
+    {
+        $keyName = static::sshKeyName();
+        $pubFile = $keyName.'.pub';
+
+        if (Storage::disk('local')->exists($pubFile)) {
+            $key = Storage::disk('local')->get($pubFile);
+            if (is_string($key) && trim($key) !== '') {
+                return $key;
+            }
+        }
+
+        $home = getenv('HOME') ?: ($_SERVER['HOME'] ?? '');
+        if ($home && file_exists($home.'/.ssh/'.$pubFile)) {
+            $content = (string) @file_get_contents($home.'/.ssh/'.$pubFile);
+            if (trim($content) !== '') {
+                Storage::disk('local')->put($pubFile, $content);
+                @chmod(Storage::disk('local')->path($pubFile), 0644);
+
+                return $content;
+            }
+        }
+
+        return null;
+    }
+
+    public function copySshKey(): void
+    {
+        try {
+            info('Calling copySshKey for method on Hosting model for hosting: '.$this->domain);
+            $provider = app(HostingProviderResolver::class)->resolve($this);
+
+            if (! $provider instanceof NeedsSshAuthorization) {
+                info('Provider does not implement NeedsSshAuthorization interface');
+
+                return;
+            }
+
+            info('Calling authorizeSshKey method on provider: '.$provider::class);
+            $provider->authorizeSshKey($this);
+        } catch (Throwable $e) {
+            Log::warning('Failed to copy SSH key to hosting '.$this->domain.': '.$e->getMessage());
+        }
     }
 }
