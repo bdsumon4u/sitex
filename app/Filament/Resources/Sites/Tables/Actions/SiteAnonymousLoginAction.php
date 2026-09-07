@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Sites\Tables\Actions;
 
 use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class SiteAnonymousLoginAction extends Action
@@ -24,27 +23,24 @@ class SiteAnonymousLoginAction extends Action
         $this->openUrlInNewTab();
 
         $this->url(function (Model $record): string {
-            $email = Cache::get('global_admin_email', config('site.global_admin_email', 'admin@master.com'));
-            $password = Cache::get('global_admin_password', config('site.global_admin_password', 'admin123'));
-            $token = Str::random(32);
+            $secret = (string) config('site.anonymous_login_secret', 'hotash_secret_access');
             $expires = now()->addSeconds(60)->timestamp;
+            $nonce = Str::random(16);
+
+            $payload = base64_encode(json_encode([
+                'expires' => $expires,
+                'nonce' => $nonce,
+            ], JSON_THROW_ON_ERROR));
+
+            $signature = hash_hmac('sha256', $payload, $secret);
 
             $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443) ? 'https://' : 'http://';
-            $baseUrl = $scheme.rtrim($record->domain, '/').'/secure-anonymous-login/'.$token;
+            $baseUrl = $scheme.rtrim((string) $record->domain, '/').'/hotash-access';
 
-            $queryParams = [
-                'email' => $email,
-                'password' => $password,
-                'expires' => $expires,
-            ];
-
-            ksort($queryParams);
-            $queryString = http_build_query($queryParams);
-            // Generate payload signature (independent of server APP_KEY differences)
-            $signatureSecret = config('site.anonymous_login_secret', 'master_auto_login_secret');
-            $signature = hash_hmac('sha256', $email.'|'.$password.'|'.$expires, $signatureSecret);
-
-            return $baseUrl.'?'.$queryString.'&signature='.$signature;
+            return $baseUrl.'?'.http_build_query([
+                'payload' => $payload,
+                'signature' => $signature,
+            ]);
         });
     }
 }

@@ -105,18 +105,18 @@ class SitesTable
             ])
             ->recordUrl(fn ($record) => SiteResource::getUrl('view', ['record' => $record]))
             ->recordActions([
-                SiteAnonymousLoginAction::make()->openUrlInNewTab(),
                 ActionGroup::make([
+                    SiteAnonymousLoginAction::make()->openUrlInNewTab(),
                     SiteEnvEditorAction::make(),
                     SiteMaintenanceDownAction::make(),
                     SiteMaintenanceUpAction::make(),
                     SiteRedeployAction::make(),
                     SiteUpdateAction::make(),
                     ForceUpdateAction::make(),
+                    EditAction::make(),
+                    SiteDeleteAction::make(),
                 ])
                     ->color(Color::Yellow),
-                EditAction::make(),
-                SiteDeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
