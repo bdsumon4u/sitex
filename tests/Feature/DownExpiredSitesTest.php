@@ -44,7 +44,6 @@ function createSiteWithRenewDate(array $siteAttributes = []): Site
         'database_pass' => 'dbp',
         'status' => SiteStatus::SITE_ACTIVE,
         'laravel_maintenance_mode' => false,
-        'cron_enabled' => true,
         'renew_date' => null,
     ], $siteAttributes));
 }

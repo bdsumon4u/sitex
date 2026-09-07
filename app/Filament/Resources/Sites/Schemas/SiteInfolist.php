@@ -31,11 +31,6 @@ class SiteInfolist
                     ->formatStateUsing(fn (?bool $state): string => $state ? __('Yes (artisan down)') : __('No (live)'))
                     ->badge()
                     ->color(fn (?bool $state): string => $state ? 'warning' : 'success'),
-                TextEntry::make('cron_enabled')
-                    ->label(__('Cron status'))
-                    ->formatStateUsing(fn (?bool $state): string => $state ? __('Active') : __('Disabled'))
-                    ->badge()
-                    ->color(fn (?bool $state): string => $state ? 'success' : 'gray'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

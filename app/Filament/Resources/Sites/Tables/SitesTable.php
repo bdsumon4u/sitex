@@ -4,14 +4,10 @@ namespace App\Filament\Resources\Sites\Tables;
 
 use App\Enums\SiteStatus;
 use App\Filament\Resources\Sites\SiteResource;
-use App\Filament\Resources\Sites\Tables\Actions\BulkSiteCronDisableAction;
-use App\Filament\Resources\Sites\Tables\Actions\BulkSiteCronEnableAction;
 use App\Filament\Resources\Sites\Tables\Actions\BulkSiteMaintenanceDownAction;
 use App\Filament\Resources\Sites\Tables\Actions\BulkSiteMaintenanceUpAction;
 use App\Filament\Resources\Sites\Tables\Actions\ForceUpdateAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteAnonymousLoginAction;
-use App\Filament\Resources\Sites\Tables\Actions\SiteCronDisableAction;
-use App\Filament\Resources\Sites\Tables\Actions\SiteCronEnableAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteDeleteAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteEnvEditorAction;
 use App\Filament\Resources\Sites\Tables\Actions\SiteMaintenanceDownAction;
@@ -68,12 +64,6 @@ class SitesTable
                     ->badge()
                     ->color(fn (?bool $state): string => $state ? 'warning' : 'success')
                     ->sortable(),
-                TextColumn::make('cron_enabled')
-                    ->label(__('Cron'))
-                    ->formatStateUsing(fn (?bool $state): string => $state ? __('Active') : __('Disabled'))
-                    ->badge()
-                    ->color(fn (?bool $state): string => $state ? 'success' : 'gray')
-                    ->sortable(),
                 TextColumn::make('renew_date')
                     ->label(__('Renew date'))
                     ->date()
@@ -112,19 +102,12 @@ class SitesTable
                     ->placeholder(__('All sites'))
                     ->trueLabel(__('In maintenance'))
                     ->falseLabel(__('Live')),
-                TernaryFilter::make('cron_enabled')
-                    ->label(__('Cron status'))
-                    ->placeholder(__('All sites'))
-                    ->trueLabel(__('Active'))
-                    ->falseLabel(__('Disabled')),
             ])
             ->recordUrl(fn ($record) => SiteResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 SiteAnonymousLoginAction::make()->openUrlInNewTab(),
                 ActionGroup::make([
                     SiteEnvEditorAction::make(),
-                    SiteCronEnableAction::make(),
-                    SiteCronDisableAction::make(),
                     SiteMaintenanceDownAction::make(),
                     SiteMaintenanceUpAction::make(),
                     SiteRedeployAction::make(),
@@ -137,8 +120,6 @@ class SitesTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    BulkSiteCronEnableAction::make(),
-                    BulkSiteCronDisableAction::make(),
                     BulkSiteMaintenanceDownAction::make(),
                     BulkSiteMaintenanceUpAction::make(),
                 ]),
