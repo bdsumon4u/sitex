@@ -84,3 +84,13 @@ it('dispatches maintenance down job for expired active sites', function () {
         return $job->site->id === $alreadyDownSite->id;
     });
 });
+
+it('correctly persists and casts renew_price', function () {
+    $site = createSiteWithRenewDate([
+        'renew_date' => '2026-12-31',
+        'renew_price' => 2500.50,
+    ]);
+
+    expect($site->fresh()->renew_price)->toBe('2500.50')
+        ->and($site->fresh()->renew_date->toDateString())->toBe('2026-12-31');
+});

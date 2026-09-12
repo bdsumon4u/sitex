@@ -21,6 +21,8 @@ class SiteExporter extends Exporter
                 ->label('Laravel maintenance'),
             ExportColumn::make('renew_date')
                 ->label('Renew date'),
+            ExportColumn::make('renew_price')
+                ->label('Renew price'),
         ];
     }
 

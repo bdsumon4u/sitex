@@ -61,6 +61,10 @@ class SitesRenewingWithinWeekWidget extends BaseWidget
                     ->label(__('Renew date'))
                     ->date()
                     ->sortable(),
+                TextColumn::make('renew_price')
+                    ->label(__('Renew price'))
+                    ->numeric(decimalPlaces: 2)
+                    ->sortable(),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable(),

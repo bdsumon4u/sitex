@@ -336,6 +336,18 @@ class SiteForm
             });
     }
 
+    protected static function renewPriceField(string $statePrefix = ''): Component
+    {
+        return TextInput::make('renew_price')
+            ->label(__('Renew price'))
+            ->numeric()
+            ->minValue(0)
+            ->nullable()
+            ->disabled(function (Get $get) use ($statePrefix) {
+                return ! $get($statePrefix.'hosting_id') || ! $get($statePrefix.'limit');
+            });
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -348,8 +360,8 @@ class SiteForm
                         ->columnSpanFull(),
                     self::domainField(),
                     self::directoryField(),
-                    self::renewDateField()
-                        ->columnSpanFull(),
+                    self::renewDateField(),
+                    self::renewPriceField(),
                 ])
                     ->dense()
                     ->columns(2)

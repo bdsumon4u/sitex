@@ -26,7 +26,8 @@ class SitesTable extends BaseSitesTable
             TextColumn::make('organization.name')
                 ->sortable()
                 ->searchable()
-                ->description(fn ($record) => $record->service_id ?? $record->organization?->service_id),
+                ->description(fn ($record) => $record->service_id ?? $record->organization?->service_id)
+                ->toggleable(isToggledHiddenByDefault: true),
             ...$table->getColumns(),
         ])
             ->filters([

@@ -21,6 +21,14 @@ class SiteInfolist
                 TextEntry::make('name'),
                 TextEntry::make('domain'),
                 TextEntry::make('directory'),
+                TextEntry::make('renew_date')
+                    ->label(__('Renew date'))
+                    ->date()
+                    ->placeholder('-'),
+                TextEntry::make('renew_price')
+                    ->label(__('Renew price'))
+                    ->numeric(decimalPlaces: 2)
+                    ->placeholder('-'),
                 TextEntry::make('email_username'),
                 TextEntry::make('email_password'),
                 TextEntry::make('database_name'),

@@ -24,6 +24,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class SitesTable
@@ -31,20 +32,13 @@ class SitesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('hosting'))
             ->poll('5s')
             ->defaultSort('id', 'desc')
             ->groups([
                 Group::make('hosting.domain'),
             ])
             ->columns([
-                TextColumn::make('parent.name')
-                    ->sortable()
-                    ->searchable()
-                    ->description(fn (Model $record): ?string => $record->parent?->domain),
-                TextColumn::make('hosting.domain')
-                    ->sortable()
-                    ->searchable()
-                    ->description(fn (Model $record): string => $record->hosting->username),
                 TextColumn::make('domain')
                     ->url(fn ($record) => 'http://'.$record->domain)
                     ->label('Domain')
@@ -53,7 +47,7 @@ class SitesTable
                     ->icon('heroicon-o-link')
                     ->sortable()
                     ->searchable()
-                    ->description(fn (Model $record): string => $record->directory),
+                    ->description(fn (Model $record): string => $record->hosting->domain),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable()
@@ -67,6 +61,11 @@ class SitesTable
                 TextColumn::make('renew_date')
                     ->label(__('Renew date'))
                     ->date()
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('renew_price')
+                    ->label(__('Renew price'))
+                    ->numeric(decimalPlaces: 2)
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('created_at')

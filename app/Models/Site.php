@@ -39,6 +39,7 @@ class Site extends Model
             'status' => SiteStatus::class,
             'laravel_maintenance_mode' => 'boolean',
             'renew_date' => 'date',
+            'renew_price' => 'decimal:2',
         ];
     }
 

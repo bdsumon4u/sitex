@@ -78,8 +78,8 @@ class MultiForm extends SiteForm
                     Group::make([
                         self::domainField('../../'),
                         self::directoryField('../../'),
-                        self::renewDateField('../../')
-                            ->columnSpanFull(),
+                        self::renewDateField('../../'),
+                        self::renewPriceField('../../'),
                         self::emailSection('../../')
                             ->columns(2)
                             ->columnSpanFull(),

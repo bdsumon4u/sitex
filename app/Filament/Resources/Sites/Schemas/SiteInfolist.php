@@ -22,6 +22,10 @@ class SiteInfolist
                     ->label(__('Renew date'))
                     ->date()
                     ->placeholder('-'),
+                TextEntry::make('renew_price')
+                    ->label(__('Renew price'))
+                    ->numeric(decimalPlaces: 2)
+                    ->placeholder('-'),
                 TextEntry::make('email_username'),
                 TextEntry::make('database_name'),
                 TextEntry::make('status')
