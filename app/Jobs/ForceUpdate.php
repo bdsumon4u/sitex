@@ -45,7 +45,7 @@ class ForceUpdate implements ShouldQueue
                     'rm -rf .git',
                     'git init',
                     'git config --global init.defaultBranch "$current_branch"',
-                    'git remote add origin https://github.com/bdsumon4u/HotashKom.git',
+                    'git remote add origin '.(config('site.repository_url', 'https://github.com/bdsumon4u/HotashKom.git')),
                     'git fetch',
                     'git clean -fd -e .env -e storage/app/public',
                     'rm -f storage/app/public/.gitignore',
