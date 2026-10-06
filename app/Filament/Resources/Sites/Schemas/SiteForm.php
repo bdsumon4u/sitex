@@ -330,10 +330,7 @@ class SiteForm
             ->label(__('Renew date'))
             ->native(false)
             ->displayFormat('M j, Y')
-            ->nullable()
-            ->disabled(function (Get $get) use ($statePrefix) {
-                return ! $get($statePrefix.'hosting_id') || ! $get($statePrefix.'limit');
-            });
+            ->nullable();
     }
 
     protected static function renewPriceField(string $statePrefix = ''): Component
@@ -342,10 +339,7 @@ class SiteForm
             ->label(__('Renew price'))
             ->numeric()
             ->minValue(0)
-            ->nullable()
-            ->disabled(function (Get $get) use ($statePrefix) {
-                return ! $get($statePrefix.'hosting_id') || ! $get($statePrefix.'limit');
-            });
+            ->nullable();
     }
 
     public static function configure(Schema $schema): Schema
